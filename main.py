@@ -1,3 +1,4 @@
+from time import sleep
 from random import randint
 import os
 
@@ -23,15 +24,20 @@ rolenames = ["Villager", "Werewolf", "Naughty Girl", "Drunk", "Hunter", "Jester"
 
 playerlist = []
 roleslist = []
+living = []
 nameconfirmation = False
+
+def displaynames():
+    print(f"All {len(playerlist)} players:")
+    for name in playerlist:
+        print(name)
+    print() # Leaves whitespace after names are displayed
 
 while True:
     newplayername = input("Input player name: (Input '0' once all players are in or '-1' to reset all names)\n")
     if newplayername == '0':
         if len(playerlist) >= 3:
-            print(f"All {len(playerlist)} players:")
-            for name in playerlist:
-                print(name)
+            displaynames()
             allplayernamesconfirm = intinputvalidate("Is this all players? (1=Yes, 0=No, add more)\n", 0, 1)
             if allplayernamesconfirm:
                 break
@@ -42,15 +48,18 @@ while True:
         roleslist = []
         print("All names reset, please input all player names again")
     else:
-        print(f"Name: {newplayername}")
-        if nameconfirmation:
-            playernameconfirm = intinputvalidate("Add name to player list? (1=Yes, 0=No)\n", 0, 1)
+        if newplayername not in playerlist:
+            print(f"Name: {newplayername}")
+            if nameconfirmation:
+                playernameconfirm = intinputvalidate("Add name to player list? (1=Yes, 0=No)\n", 0, 1)
+            else:
+                playernameconfirm = True
             if playernameconfirm:
                 playerlist.append(newplayername)
                 roleslist.append(0)
+                living.append(True)
         else:
-            playerlist.append(newplayername)
-            roleslist.append(0)
+            print("Name is already taken")
 
 # Roles setup
 
@@ -60,6 +69,8 @@ if werewolfnum <= 0:
     werewolfnum = 1
 
 # Werewolf setup
+
+werewolfkillvotes = []
 
 werewolfidlist = []
 for i in range(werewolfnum):
@@ -84,6 +95,48 @@ for i in range(len(roleslist)):
     if roleslist[i] == 1:
         continue
     else:
-        print(otherroleslist)
         roleslist[i] = otherroleslist.pop(randint(0, len(otherroleslist) - 1))
+
+
+
+print("\nAll roles have been allocated.")
+sleep(3)
+clearscreen()
+
+night = 1
+
+def villageract():
+    print("You will be asked to input two players' names to disguise your role")
+    for i in range(2):
+        villagercode = playerlist[randint(0, playernum)]
+        while True:
+            cmd = input(f"Input the name '{villagercode}'\n")
+            if cmd == villagercode:
+                break
+            else:
+                print("Incorrect input")
+
+def werewolfact():
+    for i in range(len(werewolfkillvotes)):
+        print(f"Werewolf {i+1} voted to kill {playerlist[werewolfkillvotes[i]]}")
+
+    while True:
+        flag = False
+        killvote = input("Input the name of the player you would like to kill: (leave empty to display all player names)\n")
+        if killvote == '':
+            displaynames()
+        else:
+            for i in range(len(playerlist)):
+                if playerlist[i] == killvote:
+                    werewolfkillvotes.append(i)
+                    flag = True
+            if flag:
+                break
+            else:
+                print("Player not found")
+
+def werewolfkill():
+    deadplayer = werewolfkillvotes[randint(0, len(werewolfkillvotes)-1)]
+    print(f"Player {playerlist[deadplayer]} has been killed")
+    living[deadplayer] = False
 
