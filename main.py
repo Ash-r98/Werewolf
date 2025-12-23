@@ -23,6 +23,7 @@ rolenames = ["Villager", "Werewolf", "Naughty Girl", "Drunk", "Hunter", "Jester"
 
 playerlist = []
 roleslist = []
+nameconfirmation = False
 
 while True:
     newplayername = input("Input player name: (Input '0' once all players are in or '-1' to reset all names)\n")
@@ -42,15 +43,23 @@ while True:
         print("All names reset, please input all player names again")
     else:
         print(f"Name: {newplayername}")
-        playernameconfirm = intinputvalidate("Add name to player list? (1=Yes, 0=No)\n", 0, 1)
-        if playernameconfirm:
+        if nameconfirmation:
+            playernameconfirm = intinputvalidate("Add name to player list? (1=Yes, 0=No)\n", 0, 1)
+            if playernameconfirm:
+                playerlist.append(newplayername)
+                roleslist.append(0)
+        else:
             playerlist.append(newplayername)
             roleslist.append(0)
+
+# Roles setup
 
 playernum = len(playerlist)
 werewolfnum = playernum // 4
 if werewolfnum <= 0:
     werewolfnum = 1
+
+# Werewolf setup
 
 werewolfidlist = []
 for i in range(werewolfnum):
@@ -63,3 +72,18 @@ for i in range(werewolfnum):
 for i in range(len(roleslist)):
     if i in werewolfidlist:
         roleslist[i] = 1
+
+# Other roles
+
+otherroleslist = [0, 0, 2, 3, 4, 5, 6]
+if playernum - werewolfnum > 7:
+    for i in range(playernum - werewolfnum - 7):
+        otherroleslist.append(0)  # Adds a villager for each extra player
+
+for i in range(len(roleslist)):
+    if roleslist[i] == 1:
+        continue
+    else:
+        print(otherroleslist)
+        roleslist[i] = otherroleslist.pop(randint(0, len(otherroleslist) - 1))
+
