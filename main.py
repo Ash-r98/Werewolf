@@ -105,6 +105,30 @@ clearscreen()
 
 night = 1
 
+# Character Actions
+
+def playerselectnotself(playerid):
+    while True:
+        flag = False
+        selfflag = False
+        selectname = input("Input the name of the player you would like to select: (leave empty to display all player names)\n")
+        if selectname == '':
+            displaynames()
+        else:
+            for i in range(len(playerlist)):
+                if playerlist[i] == selectname:
+                    if i == playerid:
+                        print("You can't select yourself")
+                        selfflag = True
+                    else: # the selection is valid
+                        selectid = i
+                        flag = True
+            if flag:
+                break
+            elif not selfflag:
+                print("Player not found")
+    return selectid
+
 def villageract():
     print("You will be asked to input two players' names to disguise your role")
     for i in range(2):
@@ -115,6 +139,7 @@ def villageract():
                 break
             else:
                 print("Incorrect input")
+
 
 def werewolfact():
     for i in range(len(werewolfkillvotes)):
@@ -139,4 +164,17 @@ def werewolfkill():
     deadplayer = werewolfkillvotes[randint(0, len(werewolfkillvotes)-1)]
     print(f"Player {playerlist[deadplayer]} has been killed")
     living[deadplayer] = False
+
+
+def naughtygirlact(playerid):
+    print("You will select two other players (not yourself) and swap their roles")
+    select1 = playerselectnotself(playerid)
+    while True:
+        select2 = playerselectnotself(playerid)
+        if select2 != select1:
+            break
+        else:
+            print("You can't select the same player again")
+
+    roleslist[select1], roleslist[select2] = roleslist[select2], roleslist[select1]
 
