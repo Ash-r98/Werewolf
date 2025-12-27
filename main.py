@@ -178,3 +178,9 @@ def naughtygirlact(playerid):
 
     roleslist[select1], roleslist[select2] = roleslist[select2], roleslist[select1]
 
+def drunkact(playerid):
+    print("You will select another player and swap your own role with theirs")
+    select = playerselectnotself(playerid)
+
+    roleslist[playerid], roleslist[select] = roleslist[select], roleslist[playerid]
+
