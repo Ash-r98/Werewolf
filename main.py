@@ -178,8 +178,24 @@ def drunkact(playerid):
 
     roleslist[playerid], roleslist[select] = roleslist[select], roleslist[playerid]
 
-def hunteract(playerid):
+def hunterdeathact(playerid):
     print("The Hunter has died, and can now select a player to kill")
     select = playerselectnotself(playerid)
     print(f"Player {playerlist[select]} has been killed")
     living[select] = False
+
+def sheriffact(playerid):
+    hit = False
+
+    print("You are the sheriff, and can choose a player to kill, but if you select an innocent you will die instead")
+    killconfirm = intinputvalidate("Would you like to try to kill someone tonight? (1=Yes, 0=No)\n", 0, 1)
+    if killconfirm:
+        select = playerselectnotself(playerid)
+        if roleslist[select] == 1 or roleslist[select] == 5: # Hit
+            living[select] = False
+            hit = True
+        else: # Miss
+            living[playerid] = False
+
+    return killconfirm, hit
+
