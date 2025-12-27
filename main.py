@@ -105,9 +105,11 @@ clearscreen()
 
 night = 1
 
-# Character Actions
+# Subroutines
 
 def playerselectnotself(playerid):
+    selectid = 0 # Placeholder in case of error
+
     while True:
         flag = False
         otherflag = False
@@ -133,10 +135,78 @@ def playerselectnotself(playerid):
                 print("Player not found")
     return selectid
 
+def playerselectwithself(playerid):
+    selectid = 0 # Placeholder in case of error
+
+    while True:
+        flag = False
+        otherflag = False
+        selectname = input("Input the name of the player you would like to select: (leave empty to display all player names)\n")
+        if selectname == '':
+            displaynames()
+        else:
+            for i in range(len(playerlist)):
+                if playerlist[i] == selectname:
+                    if not living[i]:
+                        print(f"Player {selectname} is dead, you can't select them")
+                        otherflag = True
+                    else:
+                        selectid = i
+                        flag = True
+            if flag:
+                break
+            elif not otherflag:
+                print("Player not found")
+    return selectid
+
+def checkwin():
+    aliveplayersnum = 0
+    alivewerewolvesnum = 0
+
+    for life in living:
+        if life:
+            aliveplayersnum += 1
+
+    for i in range(len(roleslist)):
+        if roleslist[i] == 1:
+            if living[i]:
+                alivewerewolvesnum += 1
+
+    anywin = False # If true, either villagers or werewolves have won
+    winid = 0 # 0 = No win, 1 = Villagers, 2 = Werewolves
+
+    if alivewerewolvesnum <= 0:
+        anywin = True
+        winid = 1
+    elif aliveplayersnum / 2 <= alivewerewolvesnum:
+        anywin = True
+        winid = 2
+    # If neither if statement hits, then neither side has won and the game will continue
+
+    return anywin, winid
+
+def privateplayerchoiceprep(playerid):
+    playername = playerlist[playerid]
+    print(f"Pass the device to player {playername}")
+    sleep(1)
+
+    input(f"Player {playername}, press enter when you are ready\n")
+
+    print(f"\033[31mALL PLAYERS EXCEPT PLAYER {playername} LOOK AWAY\033[0m")
+    print("3", end="\r")
+    sleep(1)
+    print("2", end="\r")
+    sleep(1)
+    print("1", end="\r")
+    sleep(1)
+
+
+# Character Actions
+
 def villageract():
     print("You will be asked to input two players' names to disguise your role")
     for i in range(2):
-        villagercode = playerlist[randint(0, playernum)]
+        villagercode = playerlist[randint(0, playernum-1)]
         while True:
             cmd = input(f"Input the name '{villagercode}'\n")
             if cmd == villagercode:
@@ -156,8 +226,9 @@ def werewolfact(playerid):
 
 def werewolfkill():
     deadplayer = werewolfkillvotes[randint(0, len(werewolfkillvotes)-1)]
-    print(f"Player {playerlist[deadplayer]} has been killed")
+    print(f"Player {playerlist[deadplayer]} has been killed by the werewolves. They were a {rolenames[roleslist[deadplayer]]}")
     living[deadplayer] = False
+    return deadplayer
 
 
 def naughtygirlact(playerid):
@@ -201,47 +272,61 @@ def sheriffact(playerid):
             hit = True
         else: # Miss
             living[playerid] = False
+            select = playerid # Returns the sheriff as the dead player
 
     return killconfirm, hit, select
+
+def vote(playerid):
+    if roleslist[playerid] != 1 and roleslist[playerid] != 5:
+        print("You must select a player to vote who you think is a werewolf. Remember, if a jester is voted out then they will win")
+    elif roleslist[playerid] == 1:
+        print("You must vote someone out of the game, votes are private so don't vote for another werewolf. Remember, if a jester is voted out then they will win")
+    else:
+        print("You are the jester, so if you get voted out you will win. Voting yourself is likely the best option here, however you are allowed to vote for anyone")
+
+    votedplayer = playerselectwithself(playerid)
+    return votedplayer
 
 
 # Game Loop
 
 night = 0
+jesterwin = False
 run = True
 while run:
     night += 1 # Increments night counter at the start of the game loop, starting at 1
 
     sheriffresult = [False, False, -1] # Resets sheriff result at the start of the game loop
+    roleslistnightcopy = roleslist # Copy of roleslist for this night that won't be changed when roles are swapped around
 
     for i in range(playernum):
         playername = playerlist[i] # For easy use in the for loop
 
         # Night number stays at top for the whole night
         clearscreen()
-        print(f"Night {night}")
+        print(f"Night {night}\n")
         sleep(1)
 
         if living[i]:
-            print(f"Pass the device to player {playername}")
-            sleep(1)
-
-            input(f"Player {playername}, press enter when you are ready")
-
-            print(f"\033[31mALL PLAYERS EXCEPT PLAYER {playername} LOOK AWAY\033[0m")
-            print("3", end="\r")
-            sleep(1)
-            print("2", end="\r")
-            sleep(1)
-            print("1", end="\r")
-            sleep(1)
+            privateplayerchoiceprep(i)
 
             print(f"Player {playername}, you are a {rolenames[roleslist[i]]}")
             sleep(1)
-            match roleslist[i]:
+            match roleslistnightcopy[i]:
                 case 0:
                     villageract()
                 case 1:
+                    # Displays all werewolf allies
+                    allylist = []
+                    for j in range(len(roleslist)):
+                        if j != i:
+                            if roleslist[j] == 1:
+                                allylist.append(playerlist[j])
+                    if len(allylist) > 0:
+                        print("The other werewolves are:")
+                        for ally in allylist:
+                            print(ally)
+
                     werewolfact(i)
                 case 2:
                     naughtygirlact(i)
@@ -258,3 +343,107 @@ while run:
 
         else:
             print(f"Player {playername} is dead.")
+
+        sleep(3)
+
+    # End of night
+
+    clearscreen()
+    print(f"Day {night}\n") # Night counter = Day counter
+    sleep(1)
+
+    print("The night has ended, and the players have woken up")
+    sleep(1)
+
+    # Werewolf kill
+    werewolfvictim = werewolfkill()
+    if roleslist[werewolfvictim] == 4:
+        hunterdeathact(werewolfvictim)
+    sleep(1)
+
+    # Possible sheriff kill
+    if sheriffresult[0]: # If the sheriff attempted to kill someone
+        if sheriffresult[1]: # If the sheriff correctly killed a werewolf or jester
+            print(f"The sheriff correctly killed player {playerlist[sheriffresult[2]]}, who was a {rolenames[roleslist[sheriffresult[2]]]}")
+        else: # The sheriff incorrectly shot and killed themselves
+            print(f"The sheriff {playerlist[sheriffresult[2]]} attempted to shoot an innocent and instead killed themself")
+        sleep(1)
+
+    checkwinresult = checkwin()
+    if checkwinresult[0]: # If there has been a win, exit the game loop
+        run = False
+    else: # Otherwise, the players will vote someone out
+        print("It is time to vote a player out. Discuss amongst yourselves who you want to vote")
+        sleep(1)
+        input("Press enter when everyone is ready to vote\n")
+
+        votelist = []
+        for i in range(playernum):
+            clearscreen()
+            print(f"Day {night}\n")  # Night counter = Day counter
+            sleep(1)
+
+            if living[i]:
+                privateplayerchoiceprep(i)
+
+                playervote = vote(i)
+
+                voteflag = True
+                for j in range(len(votelist)):
+                    if votelist[j][0] == playervote:
+                        votelist[j][1] += 1
+                        voteflag = False
+                if voteflag: # If vote not already in list
+                    votelist.append([playervote, 1])
+
+            else:
+                print(f"Player {playerlist[i]} is dead")
+                sleep(2)
+
+        clearscreen()
+        print(f"Day {night}\n")  # Night counter = Day counter
+        sleep(1)
+        print("Every player has voted\n")
+        sleep(1)
+
+        maxvotenum = 0
+        votedplayerlist = []
+        for i in range(len(votelist)):
+            if votelist[i][1] > maxvotenum: # If strictly higher than max
+                maxvotenum = votelist[i][1]
+                votedplayerlist = [votelist[i][0]]
+            elif votelist[i][1] == maxvotenum: # If equal to max
+                votedplayerlist.append(votelist[i][0])
+            # Otherwise the index can be ignored
+
+        if len(votedplayerlist) == 1: # If one player had the most votes
+            votedplayer = votedplayerlist[0]
+            print(f"Player {playerlist[votedplayer]} was voted out. They were a {rolenames[roleslist[votedplayer]]}")
+            living[votedplayer] = False
+            if roleslist[votedplayer] == 4:
+                hunterdeathact(votedplayer)
+            elif roleslist[votedplayer] == 5:
+                jesterwin = True
+                run = False
+        else: # In case of a tie
+            print(f"There was a tie in votes between {len(votedplayerlist)} players:")
+            for name in votedplayerlist:
+                print(name)
+            print("Because there was a tie in votes, no one will be removed from the game")
+
+        checkwinresult = checkwin()
+        if checkwinresult[0]:
+            run = False
+
+        sleep(3)
+
+
+if not jesterwin:
+    if checkwinresult[1] == 1:
+        print("The villagers have won!")
+    elif checkwinresult[1] == 2:
+        print("The werewolves have won!")
+else:
+    print("The jester has won!")
+
+sleep(5)
