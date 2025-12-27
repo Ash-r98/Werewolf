@@ -110,7 +110,7 @@ night = 1
 def playerselectnotself(playerid):
     while True:
         flag = False
-        selfflag = False
+        otherflag = False
         selectname = input("Input the name of the player you would like to select: (leave empty to display all player names)\n")
         if selectname == '':
             displaynames()
@@ -119,13 +119,17 @@ def playerselectnotself(playerid):
                 if playerlist[i] == selectname:
                     if i == playerid:
                         print("You can't select yourself")
-                        selfflag = True
-                    else: # the selection is valid
-                        selectid = i
-                        flag = True
+                        otherflag = True
+                    else:
+                        if not living[i]:
+                            print(f"Player {selectname} is dead, you can't select them")
+                            otherflag = True
+                        else:
+                            selectid = i
+                            flag = True
             if flag:
                 break
-            elif not selfflag:
+            elif not otherflag:
                 print("Player not found")
     return selectid
 
@@ -141,24 +145,14 @@ def villageract():
                 print("Incorrect input")
 
 
-def werewolfact():
+def werewolfact(playerid):
+    print("You must select a player to vote to kill them. One of the voted players will be killed at random")
+
     for i in range(len(werewolfkillvotes)):
         print(f"Werewolf {i+1} voted to kill {playerlist[werewolfkillvotes[i]]}")
 
-    while True:
-        flag = False
-        killvote = input("Input the name of the player you would like to kill: (leave empty to display all player names)\n")
-        if killvote == '':
-            displaynames()
-        else:
-            for i in range(len(playerlist)):
-                if playerlist[i] == killvote:
-                    werewolfkillvotes.append(i)
-                    flag = True
-            if flag:
-                break
-            else:
-                print("Player not found")
+    killvote = playerselectnotself(playerid)
+    werewolfkillvotes.append(killvote)
 
 def werewolfkill():
     deadplayer = werewolfkillvotes[randint(0, len(werewolfkillvotes)-1)]
@@ -184,3 +178,8 @@ def drunkact(playerid):
 
     roleslist[playerid], roleslist[select] = roleslist[select], roleslist[playerid]
 
+def hunteract(playerid):
+    print("The Hunter has died, and can now select a player to kill")
+    select = playerselectnotself(playerid)
+    print(f"Player {playerlist[select]} has been killed")
+    living[select] = False
