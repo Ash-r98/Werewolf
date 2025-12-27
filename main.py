@@ -172,11 +172,13 @@ def naughtygirlact(playerid):
 
     roleslist[select1], roleslist[select2] = roleslist[select2], roleslist[select1]
 
+
 def drunkact(playerid):
     print("You will select another player and swap your own role with theirs")
     select = playerselectnotself(playerid)
 
     roleslist[playerid], roleslist[select] = roleslist[select], roleslist[playerid]
+
 
 def hunterdeathact(playerid):
     print("The Hunter has died, and can now select a player to kill")
@@ -184,8 +186,11 @@ def hunterdeathact(playerid):
     print(f"Player {playerlist[select]} has been killed")
     living[select] = False
 
+
 def sheriffact(playerid):
+    # Placeholder values for return with no action
     hit = False
+    select = -1
 
     print("You are the sheriff, and can choose a player to kill, but if you select an innocent you will die instead")
     killconfirm = intinputvalidate("Would you like to try to kill someone tonight? (1=Yes, 0=No)\n", 0, 1)
@@ -197,5 +202,59 @@ def sheriffact(playerid):
         else: # Miss
             living[playerid] = False
 
-    return killconfirm, hit
+    return killconfirm, hit, select
 
+
+# Game Loop
+
+night = 0
+run = True
+while run:
+    night += 1 # Increments night counter at the start of the game loop, starting at 1
+
+    sheriffresult = [False, False, -1] # Resets sheriff result at the start of the game loop
+
+    for i in range(playernum):
+        playername = playerlist[i] # For easy use in the for loop
+
+        # Night number stays at top for the whole night
+        clearscreen()
+        print(f"Night {night}")
+        sleep(1)
+
+        if living[i]:
+            print(f"Pass the device to player {playername}")
+            sleep(1)
+
+            input(f"Player {playername}, press enter when you are ready")
+
+            print(f"\033[31mALL PLAYERS EXCEPT PLAYER {playername} LOOK AWAY\033[0m")
+            print("3", end="\r")
+            sleep(1)
+            print("2", end="\r")
+            sleep(1)
+            print("1", end="\r")
+            sleep(1)
+
+            print(f"Player {playername}, you are a {rolenames[roleslist[i]]}")
+            sleep(1)
+            match roleslist[i]:
+                case 0:
+                    villageract()
+                case 1:
+                    werewolfact(i)
+                case 2:
+                    naughtygirlact(i)
+                case 3:
+                    drunkact(i)
+                case 4:
+                    print("When you die, you will be able to kill a player of your choice. Try to kill a werewolf")
+                case 5:
+                    print("Your goal is to be voted out by the other players. If this happens you will win, but if you are killed then you lose")
+                case 6:
+                    sheriffresult = sheriffact(i)
+                case _:
+                    print("Role not found")
+
+        else:
+            print(f"Player {playername} is dead.")
