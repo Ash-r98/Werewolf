@@ -334,8 +334,10 @@ while run:
                     drunkact(i)
                 case 4:
                     print("When you die, you will be able to kill a player of your choice. Try to kill a werewolf")
+                    villageract()
                 case 5:
                     print("Your goal is to be voted out by the other players. If this happens you will win, but if you are killed then you lose")
+                    villageract()
                 case 6:
                     sheriffresult = sheriffact(i)
                 case _:
