@@ -107,6 +107,12 @@ night = 1
 
 # Subroutines
 
+def die(playerid):
+    print(f"Player {playerlist[playerid]} has died. They were a {rolenames[roleslist[playerid]]}")
+    living[playerid] = False
+    if roleslist[playerid] == 4:
+        hunterdeathact(playerid)
+
 def playerselectnotself(playerid):
     selectid = 0 # Placeholder in case of error
 
@@ -135,7 +141,7 @@ def playerselectnotself(playerid):
                 print("Player not found")
     return selectid
 
-def playerselectwithself(playerid):
+def playerselectwithself():
     selectid = 0 # Placeholder in case of error
 
     while True:
@@ -228,7 +234,6 @@ def werewolfkill():
     deadplayer = werewolfkillvotes[randint(0, len(werewolfkillvotes)-1)]
     print(f"Player {playerlist[deadplayer]} has been killed by the werewolves. They were a {rolenames[roleslist[deadplayer]]}")
     living[deadplayer] = False
-    return deadplayer
 
 
 def naughtygirlact(playerid):
@@ -254,8 +259,8 @@ def drunkact(playerid):
 def hunterdeathact(playerid):
     print("The Hunter has died, and can now select a player to kill")
     select = playerselectnotself(playerid)
-    print(f"Player {playerlist[select]} has been killed")
-    living[select] = False
+    print(f"You chose to kill player {playerlist[select]}")
+    die(select)
 
 
 def sheriffact(playerid):
@@ -284,7 +289,7 @@ def vote(playerid):
     else:
         print("You are the jester, so if you get voted out you will win. Voting yourself is likely the best option here, however you are allowed to vote for anyone")
 
-    votedplayer = playerselectwithself(playerid)
+    votedplayer = playerselectwithself()
     return votedplayer
 
 
@@ -356,17 +361,17 @@ while run:
     sleep(1)
 
     # Werewolf kill
-    werewolfvictim = werewolfkill()
-    if roleslist[werewolfvictim] == 4:
-        hunterdeathact(werewolfvictim)
+    werewolfkill()
     sleep(1)
 
     # Possible sheriff kill
     if sheriffresult[0]: # If the sheriff attempted to kill someone
         if sheriffresult[1]: # If the sheriff correctly killed a werewolf or jester
-            print(f"The sheriff correctly killed player {playerlist[sheriffresult[2]]}, who was a {rolenames[roleslist[sheriffresult[2]]]}")
+            print(f"The sheriff correctly killed player {playerlist[sheriffresult[2]]}")
+            die(sheriffresult[2])
         else: # The sheriff incorrectly shot and killed themselves
             print(f"The sheriff {playerlist[sheriffresult[2]]} attempted to shoot an innocent and instead killed themself")
+            die(sheriffresult[2])
         sleep(1)
 
     checkwinresult = checkwin()
@@ -418,11 +423,9 @@ while run:
 
         if len(votedplayerlist) == 1: # If one player had the most votes
             votedplayer = votedplayerlist[0]
-            print(f"Player {playerlist[votedplayer]} was voted out. They were a {rolenames[roleslist[votedplayer]]}")
-            living[votedplayer] = False
-            if roleslist[votedplayer] == 4:
-                hunterdeathact(votedplayer)
-            elif roleslist[votedplayer] == 5:
+            print(f"Player {playerlist[votedplayer]} was voted out.")
+            die(votedplayer)
+            if roleslist[votedplayer] == 5:
                 jesterwin = True
                 run = False
         else: # In case of a tie
