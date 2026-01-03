@@ -87,8 +87,8 @@ for i in range(len(roleslist)):
 # Other roles
 
 otherroleslist = [0, 0, 2, 3, 4, 5, 6]
-if playernum - werewolfnum > 7:
-    for i in range(playernum - werewolfnum - 7):
+if playernum - werewolfnum > len(otherroleslist):
+    for i in range(playernum - werewolfnum - len(otherroleslist)):
         otherroleslist.append(0)  # Adds a villager for each extra player
 
 for i in range(len(roleslist)):
@@ -141,15 +141,17 @@ def playerselectnotself(playerid):
                 print("Player not found")
     return selectid
 
-def playerselectwithself():
+def playerselectforvote():
     selectid = 0 # Placeholder in case of error
 
     while True:
         flag = False
         otherflag = False
-        selectname = input("Input the name of the player you would like to select: (leave empty to display all player names)\n")
+        selectname = input("Input the name of the player you would like to select: (press enter to display all player names, enter 'skip' to skip vote)\n")
         if selectname == '':
             displaynames()
+        elif selectname == 'skip':
+            return 'skip'
         else:
             for i in range(len(playerlist)):
                 if playerlist[i] == selectname:
@@ -283,13 +285,13 @@ def sheriffact(playerid):
 
 def vote(playerid):
     if roleslist[playerid] != 1 and roleslist[playerid] != 5:
-        print("You must select a player to vote who you think is a werewolf. Remember, if a jester is voted out then they will win")
+        print("You can select a player to vote who you think is a werewolf, or you can skip vote. Remember, if a jester is voted out then they will win")
     elif roleslist[playerid] == 1:
-        print("You must vote someone out of the game, votes are private so don't vote for another werewolf. Remember, if a jester is voted out then they will win")
+        print("You can vote someone out of the game, votes are private so don't vote for another werewolf, or you can skip vote. Remember, if a jester is voted out then they will win")
     else:
-        print("You are the jester, so if you get voted out you will win. Voting yourself is likely the best option here, however you are allowed to vote for anyone")
+        print("You are the jester, so if you get voted out you will win. Voting yourself is likely the best option here, however you are allowed to vote for anyone or skip vote")
 
-    votedplayer = playerselectwithself()
+    votedplayer = playerselectforvote()
     return votedplayer
 
 
@@ -425,11 +427,14 @@ while run:
 
         if len(votedplayerlist) == 1: # If one player had the most votes
             votedplayer = votedplayerlist[0]
-            print(f"Player {playerlist[votedplayer]} was voted out.")
-            die(votedplayer)
-            if roleslist[votedplayer] == 5:
-                jesterwin = True
-                run = False
+            if votedplayer != 'skip':
+                print(f"Player {playerlist[votedplayer]} was voted out.")
+                die(votedplayer)
+                if roleslist[votedplayer] == 5:
+                    jesterwin = True
+                    run = False
+            else:
+                print("The players chose to skip the vote")
         else: # In case of a tie
             print(f"There was a tie in votes between {len(votedplayerlist)} players:")
             for name in votedplayerlist:
@@ -440,7 +445,7 @@ while run:
         if checkwinresult[0]:
             run = False
 
-        sleep(3)
+        input("\nPress enter when everyone is ready for the next night:\n")
 
 
 if not jesterwin:
@@ -451,4 +456,4 @@ if not jesterwin:
 else:
     print("The jester has won!")
 
-sleep(5)
+sleep(10)
