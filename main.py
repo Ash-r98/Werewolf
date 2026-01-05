@@ -19,8 +19,8 @@ def intinputvalidate(prompt, lower, upper):
 def clearscreen():
     os.system('cls' if os.name == 'nt' else 'clear') # Wipe terminal
 
-# Roles: 0 - Villager, 1 - Werewolf, 2 - Naughty Girl, 3 - Drunk, 4 - Hunter, 5 - Jester, 6 - Sheriff
-rolenames = ["Villager", "Werewolf", "Naughty Girl", "Drunk", "Hunter", "Jester", "Sheriff"]
+# Roles: 0 - Villager, 1 - Werewolf, 2 - Naughty Girl, 3 - Drunk, 4 - Hunter, 5 - Jester, 6 - Sheriff, 7 - Medic
+rolenames = ["Villager", "Werewolf", "Naughty Girl", "Drunk", "Hunter", "Jester", "Sheriff", "Medic"]
 
 playerlist = []
 roleslist = []
@@ -86,7 +86,7 @@ for i in range(len(roleslist)):
 
 # Other roles
 
-otherroleslist = [0, 0, 2, 3, 4, 5, 6]
+otherroleslist = [0, 2, 3, 4, 5, 6, 7]
 if playernum - werewolfnum > len(otherroleslist):
     for i in range(playernum - werewolfnum - len(otherroleslist)):
         otherroleslist.append(0)  # Adds a villager for each extra player
@@ -96,6 +96,12 @@ for i in range(len(roleslist)):
         continue
     else:
         roleslist[i] = otherroleslist.pop(randint(0, len(otherroleslist) - 1))
+
+
+medicprotectlist = []
+for i in range(playernum):
+    medicprotectlist.append(False)
+medicprotectlistreset = medicprotectlist
 
 
 
@@ -211,13 +217,13 @@ def privateplayerchoiceprep(playerid):
 
 # Character Actions
 
-def villageract():
+def disguiseact():
     print("You will be asked to input two players' names to disguise your role")
     for i in range(2):
-        villagercode = playerlist[randint(0, playernum-1)]
+        disguisecode = playerlist[randint(0, playernum-1)]
         while True:
-            cmd = input(f"Input the name '{villagercode}'\n")
-            if cmd == villagercode:
+            cmd = input(f"Input the name '{disguisecode}'\n")
+            if cmd == disguisecode:
                 break
             else:
                 print("Incorrect input")
@@ -234,8 +240,11 @@ def werewolfact(playerid):
 
 def werewolfkill():
     deadplayer = werewolfkillvotes[randint(0, len(werewolfkillvotes)-1)]
-    print(f"Player {playerlist[deadplayer]} has been killed by the werewolves. They were a {rolenames[roleslist[deadplayer]]}")
-    living[deadplayer] = False
+    if not medicprotectlist[deadplayer]:
+        print(f"Player {playerlist[deadplayer]} has been killed by the werewolves. They were a {rolenames[roleslist[deadplayer]]}")
+        living[deadplayer] = False
+    else:
+        print(f"The werewolves attempted to kill {playerlist[deadplayer]}, but they were protected by the medic and survived")
 
 
 def naughtygirlact(playerid):
@@ -283,6 +292,13 @@ def sheriffact(playerid):
 
     return killconfirm, hit, select
 
+def medicact(playerid):
+    print("You are the medic, and can choose a player this round (not yourself) to protect them from being killed by werewolves (other killing roles may bypass your protection)")
+    select = playerselectnotself(playerid)
+    print(f"Player {playerlist[select]} will be protected from werewolves this round")
+    medicprotectlist[select] = True
+
+
 def vote(playerid):
     if roleslist[playerid] != 1 and roleslist[playerid] != 5:
         print("You can select a player to vote who you think is a werewolf, or you can skip vote. Remember, if a jester is voted out then they will win")
@@ -304,6 +320,7 @@ while run:
     night += 1 # Increments night counter at the start of the game loop, starting at 1
 
     sheriffresult = [False, False, -1] # Resets sheriff result at the start of the game loop
+    medicprotectlist = medicprotectlistreset
     roleslistnightcopy = roleslist # Copy of roleslist for this night that won't be changed when roles are swapped around
 
     for i in range(playernum):
@@ -320,9 +337,9 @@ while run:
             print(f"Player {playername}, you are a {rolenames[roleslist[i]]}")
             sleep(1)
             match roleslistnightcopy[i]:
-                case 0:
-                    villageract()
-                case 1:
+                case 0: # Villager
+                    disguiseact()
+                case 1: # Werewolf
                     # Displays all werewolf allies
                     allylist = []
                     for j in range(len(roleslist)):
@@ -335,18 +352,20 @@ while run:
                             print(ally)
 
                     werewolfact(i)
-                case 2:
+                case 2: # Naughty Girl
                     naughtygirlact(i)
-                case 3:
+                case 3: # Drunk
                     drunkact(i)
-                case 4:
+                case 4: # Hunter
                     print("When you die, you will be able to kill a player of your choice. Try to kill a werewolf")
-                    villageract()
-                case 5:
+                    disguiseact()
+                case 5: # Jester
                     print("Your goal is to be voted out by the other players. If this happens you will win, but if you are killed then you lose")
-                    villageract()
-                case 6:
+                    disguiseact()
+                case 6: # Sheriff
                     sheriffresult = sheriffact(i)
+                case 7: # Medic
+                    medicact(i)
                 case _:
                     print("Role not found")
 
