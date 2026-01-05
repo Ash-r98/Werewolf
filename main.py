@@ -19,8 +19,11 @@ def intinputvalidate(prompt, lower, upper):
 def clearscreen():
     os.system('cls' if os.name == 'nt' else 'clear') # Wipe terminal
 
-# Roles: 0 - Villager, 1 - Werewolf, 2 - Naughty Girl, 3 - Drunk, 4 - Hunter, 5 - Jester, 6 - Sheriff, 7 - Medic
-rolenames = ["Villager", "Werewolf", "Naughty Girl", "Drunk", "Hunter", "Jester", "Sheriff", "Medic"]
+# Roles: 0 - Villager, 1 - Werewolf, 2 - Naughty Girl, 3 - Drunk, 4 - Hunter, 5 - Jester, 6 - Sheriff, 7 - Medic, 8 - Survivor
+# Town: Villager, Naughty Girl, Drunk, Hunter, Sheriff, Medic
+# Neutral: Jester, Survivor
+# Evil: Werewolf
+rolenames = ["Villager", "Werewolf", "Naughty Girl", "Drunk", "Hunter", "Jester", "Sheriff", "Medic", "Survivor"]
 
 playerlist = []
 roleslist = []
@@ -61,12 +64,14 @@ while True:
         else:
             print("Name is already taken")
 
+
 # Roles setup
 
 playernum = len(playerlist)
 werewolfnum = playernum // 4
 if werewolfnum <= 0:
     werewolfnum = 1
+
 
 # Werewolf setup
 
@@ -84,9 +89,10 @@ for i in range(len(roleslist)):
     if i in werewolfidlist:
         roleslist[i] = 1
 
+
 # Other roles
 
-otherroleslist = [0, 2, 3, 4, 5, 6, 7]
+otherroleslist = [0, 2, 3, 4, 5, 6, 7, 8]
 if playernum - werewolfnum > len(otherroleslist):
     for i in range(playernum - werewolfnum - len(otherroleslist)):
         otherroleslist.append(0)  # Adds a villager for each extra player
@@ -97,11 +103,16 @@ for i in range(len(roleslist)):
     else:
         roleslist[i] = otherroleslist.pop(randint(0, len(otherroleslist) - 1))
 
+# Medic protection list
 
-medicprotectlist = []
+protectlist = []
 for i in range(playernum):
-    medicprotectlist.append(False)
-medicprotectlistreset = medicprotectlist
+    protectlist.append(False)
+protectlistreset = protectlist
+
+# Survivor Protection Variable
+
+survivorprotectavailable = [True]
 
 
 
@@ -238,13 +249,16 @@ def werewolfact(playerid):
     killvote = playerselectnotself(playerid)
     werewolfkillvotes.append(killvote)
 
+def werewolfkillconfirmed(deadplayer):
+    print(f"Player {playerlist[deadplayer]} has been killed by the werewolves. They were a {rolenames[roleslist[deadplayer]]}")
+    living[deadplayer] = False
+
 def werewolfkill():
     deadplayer = werewolfkillvotes[randint(0, len(werewolfkillvotes)-1)]
-    if not medicprotectlist[deadplayer]:
-        print(f"Player {playerlist[deadplayer]} has been killed by the werewolves. They were a {rolenames[roleslist[deadplayer]]}")
-        living[deadplayer] = False
+    if not protectlist[deadplayer]:
+        werewolfkillconfirmed(deadplayer)
     else:
-        print(f"The werewolves attempted to kill {playerlist[deadplayer]}, but they were protected by the medic and survived")
+        print(f"The werewolves attempted to kill {playerlist[deadplayer]}, but they were protected")
 
 
 def naughtygirlact(playerid):
@@ -279,11 +293,11 @@ def sheriffact(playerid):
     hit = False
     select = -1
 
-    print("You are the sheriff, and can choose a player to kill, but if you select an innocent you will die instead")
+    print("You are the sheriff, and can choose a player to kill, but if you select an innocent you will die instead: You can freely kill any neutral or evil roles")
     killconfirm = intinputvalidate("Would you like to try to kill someone tonight? (1=Yes, 0=No)\n", 0, 1)
     if killconfirm:
         select = playerselectnotself(playerid)
-        if roleslist[select] == 1 or roleslist[select] == 5: # Hit
+        if roleslist[select] == 1 or roleslist[select] == 5 or roleslist[select] == 8: # Hit
             living[select] = False
             hit = True
         else: # Miss
@@ -292,11 +306,26 @@ def sheriffact(playerid):
 
     return killconfirm, hit, select
 
+
 def medicact(playerid):
     print("You are the medic, and can choose a player this round (not yourself) to protect them from being killed by werewolves (other killing roles may bypass your protection)")
     select = playerselectnotself(playerid)
     print(f"Player {playerlist[select]} will be protected from werewolves this round")
-    medicprotectlist[select] = True
+    protectlist[select] = True
+
+
+def survivoract(playerid):
+    print("You are the survivor. You are a neutral, and only win if you are alive when the game ends, whether the werewolves or villagers win")
+    sleep(1)
+    if survivorprotectavailable[0]:
+        print("You can protect yourself from death for one night in the game")
+        protectconfirm = intinputvalidate("Would you like to protect yourself tonight? (1=Yes, 0=No)\n", 0, 1)
+        if protectconfirm:
+            protectlist[playerid] = True
+            survivorprotectavailable[0] = False
+    else:
+        print("You have already used your one time protection this game, and can no longer act during the night. Try not to die")
+        disguiseact()
 
 
 def vote(playerid):
@@ -320,7 +349,7 @@ while run:
     night += 1 # Increments night counter at the start of the game loop, starting at 1
 
     sheriffresult = [False, False, -1] # Resets sheriff result at the start of the game loop
-    medicprotectlist = medicprotectlistreset
+    protectlist = protectlistreset # Resets medic protection list at the start of the game loop
     roleslistnightcopy = roleslist # Copy of roleslist for this night that won't be changed when roles are swapped around
 
     for i in range(playernum):
@@ -366,6 +395,8 @@ while run:
                     sheriffresult = sheriffact(i)
                 case 7: # Medic
                     medicact(i)
+                case 8: # Survivor
+                    survivoract(i)
                 case _:
                     print("Role not found")
 
@@ -389,9 +420,12 @@ while run:
 
     # Possible sheriff kill
     if sheriffresult[0]: # If the sheriff attempted to kill someone
-        if sheriffresult[1]: # If the sheriff correctly killed a werewolf or jester
-            print(f"The sheriff correctly killed player {playerlist[sheriffresult[2]]}")
-            die(sheriffresult[2])
+        if sheriffresult[1]: # If the sheriff correctly killed non-town
+            if protectlist[sheriffresult[2]]:
+                print(f"The sheriff attempted to kill player {playerlist[sheriffresult[2]]}, but they were protected")
+            else:
+                print(f"The sheriff correctly killed player {playerlist[sheriffresult[2]]}")
+                die(sheriffresult[2])
         else: # The sheriff incorrectly shot and killed themselves
             print(f"The sheriff {playerlist[sheriffresult[2]]} attempted to shoot an innocent and instead killed themself")
             die(sheriffresult[2])
@@ -467,6 +501,8 @@ while run:
         input("\nPress enter when everyone is ready for the next night:\n")
 
 
+# Main winners
+
 if not jesterwin:
     if checkwinresult[1] == 1:
         print("The villagers have won!")
@@ -474,5 +510,15 @@ if not jesterwin:
         print("The werewolves have won!")
 else:
     print("The jester has won!")
+
+sleep(1)
+
+# Other winners
+
+# Survivor win
+for i in range(playernum):
+    if roleslist[i] == 8:
+        if living[i]:
+            print(f"Player {playerlist[i]} also won, as they were the survivor and lived to the end of the game!")
 
 sleep(10)
