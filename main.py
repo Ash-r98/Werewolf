@@ -102,6 +102,7 @@ for i in range(len(roleslist)):
         continue
     else:
         roleslist[i] = otherroleslist.pop(randint(0, len(otherroleslist) - 1))
+roleslist = (8, 1, 0)
 
 # Medic protection list
 
@@ -244,7 +245,7 @@ def werewolfact(playerid):
     print("You must select a player to vote to kill them. One of the voted players will be killed at random")
 
     for i in range(len(werewolfkillvotes)):
-        print(f"Werewolf {i+1} voted to kill {playerlist[werewolfkillvotes[i]]}")
+        print(f"Werewolf {i+1} voted to kill {playerlist[werewolfkillvotes[i]]} this night")
 
     killvote = playerselectnotself(playerid)
     werewolfkillvotes.append(killvote)
@@ -348,6 +349,7 @@ run = True
 while run:
     night += 1 # Increments night counter at the start of the game loop, starting at 1
 
+    werewolfkillvotes = [] # Resets werewolf kill votes at the start of the game loop
     sheriffresult = [False, False, -1] # Resets sheriff result at the start of the game loop
     protectlist = protectlistreset # Resets medic protection list at the start of the game loop
     roleslistnightcopy = roleslist # Copy of roleslist for this night that won't be changed when roles are swapped around
@@ -498,6 +500,7 @@ while run:
         if checkwinresult[0]:
             run = False
 
+        sleep(1)
         input("\nPress enter when everyone is ready for the next night:\n")
 
 
