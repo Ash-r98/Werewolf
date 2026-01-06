@@ -106,6 +106,7 @@ for i in range(len(roleslist)):
         continue
     else:
         roleslist[i] = otherroleslist.pop(randint(0, len(otherroleslist) - 1))
+roleslist = [2, 1, 3, 0]
 
 # Medic protection list
 
@@ -356,7 +357,7 @@ while run:
     werewolfkillvotes = [] # Resets werewolf kill votes at the start of the game loop
     sheriffresult = [False, False, -1] # Resets sheriff result at the start of the game loop
     protectlist = protectlistreset # Resets medic protection list at the start of the game loop
-    roleslistnightcopy = roleslist # Copy of roleslist for this night that won't be changed when roles are swapped around
+    roleslistnightcopy = roleslist[:] # Copy of roleslist for this night that won't be changed when roles are swapped around
 
     # Werewolf ally list updates at start of night
     werewolfallylist = []
@@ -410,7 +411,7 @@ while run:
         else:
             print(f"Player {playername} is dead.")
 
-        sleep(3)
+        input("Press enter when you are ready to end your action and move on to the next player:\n")
 
     # End of night
 
@@ -504,9 +505,9 @@ while run:
         checkwinresult = checkwin()
         if checkwinresult[0]:
             run = False
-
-        sleep(1)
-        input("\nPress enter when everyone is ready for the next night:\n")
+        else:
+            sleep(1)
+            input("\nPress enter when everyone is ready for the next night:\n")
 
 
 # Main winners
