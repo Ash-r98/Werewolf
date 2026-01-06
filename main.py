@@ -106,7 +106,6 @@ for i in range(len(roleslist)):
         continue
     else:
         roleslist[i] = otherroleslist.pop(randint(0, len(otherroleslist) - 1))
-roleslist = (8, 1, 0)
 
 # Medic protection list
 
@@ -359,6 +358,12 @@ while run:
     protectlist = protectlistreset # Resets medic protection list at the start of the game loop
     roleslistnightcopy = roleslist # Copy of roleslist for this night that won't be changed when roles are swapped around
 
+    # Werewolf ally list updates at start of night
+    werewolfallylist = []
+    for j in range(len(roleslist)):
+        if roleslist[j] == 1:
+            werewolfallylist.append(playerlist[j])
+
     for i in range(playernum):
         playername = playerlist[i] # For easy use in the for loop
 
@@ -370,20 +375,18 @@ while run:
         if living[i]:
             privateplayerchoiceprep(i)
 
-            print(f"Player {playername}, you are a {rolenames[roleslist[i]]}")
+            print(f"Player {playername}, you are a {rolenames[roleslistnightcopy[i]]}")
             sleep(1)
             match roleslistnightcopy[i]:
                 case 0: # Villager
                     disguiseact()
                 case 1: # Werewolf
                     # Displays all werewolf allies
-                    if len(werewolfidlist) > 1:
+                    if len(werewolfallylist) > 1:
                         print("The werewolves are:")
-                        for allyid in werewolfidlist:
-                            if living[allyid]:
-                                print(playerlist[allyid])
-                            else:
-                                print(f"{playerlist[allyid]} (dead)")
+                        for ally in werewolfallylist:
+                            print(ally)
+
                     werewolfact(i)
                 case 2: # Naughty Girl
                     naughtygirlact(i)
