@@ -29,6 +29,7 @@ playerlist = []
 roleslist = []
 living = []
 nameconfirmation = False
+devmode = False
 
 def displaynames():
     print(f"All {len(playerlist)} players:")
@@ -61,6 +62,9 @@ while True:
                 playerlist.append(newplayername)
                 roleslist.append(0)
                 living.append(True)
+            if newplayername == '`dev`':
+                print("devmode activated")
+                devmode = True
         else:
             print("Name is already taken")
 
@@ -219,12 +223,13 @@ def privateplayerchoiceprep(playerid):
     input(f"Player {playername}, press enter when you are ready\n")
 
     print(f"\033[31mALL PLAYERS EXCEPT PLAYER {playername} LOOK AWAY\033[0m")
-    print("3", end="\r")
-    sleep(1)
-    print("2", end="\r")
-    sleep(1)
-    print("1", end="\r")
-    sleep(1)
+    if not devmode:
+        print("3", end="\r")
+        sleep(1)
+        print("2", end="\r")
+        sleep(1)
+        print("1", end="\r")
+        sleep(1)
 
 
 # Character Actions
@@ -372,16 +377,13 @@ while run:
                     disguiseact()
                 case 1: # Werewolf
                     # Displays all werewolf allies
-                    allylist = []
-                    for j in range(len(roleslist)):
-                        if j != i:
-                            if roleslist[j] == 1:
-                                allylist.append(playerlist[j])
-                    if len(allylist) > 0:
-                        print("The other werewolves are:")
-                        for ally in allylist:
-                            print(ally)
-
+                    if len(werewolfidlist) > 1:
+                        print("The werewolves are:")
+                        for allyid in werewolfidlist:
+                            if living[allyid]:
+                                print(playerlist[allyid])
+                            else:
+                                print(f"{playerlist[allyid]} (dead)")
                     werewolfact(i)
                 case 2: # Naughty Girl
                     naughtygirlact(i)
