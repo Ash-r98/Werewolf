@@ -42,20 +42,20 @@ class Player:
 rolenames = ["Villager", "Werewolf", "Naughty Girl", "Drunk", "Hunter", "Jester", "Sheriff", "Medic", "Survivor"]
 
 playerlist = []
+playernamelist = []
 roleslist = []
-living = []
 devmode = False
 
 def displaynames():
-    print(f"All {len(playerlist)} players:")
-    for name in playerlist:
+    print(f"All {len(playernamelist)} players:")
+    for name in playernamelist:
         print(name)
     print() # Leaves whitespace after names are displayed
 
 while True:
     newplayername = input("Input player name: (Input '0' once all players are in or '-1' to reset all names)\n")
     if newplayername == '0':
-        if len(playerlist) >= 3:
+        if len(playernamelist) >= 3:
             displaynames()
             allplayernamesconfirm = intinputvalidate("Is this all players? (1=Yes, 0=No, add more)\n", 0, 1)
             if allplayernamesconfirm:
@@ -63,15 +63,14 @@ while True:
         else:
             print("You must have at least 3 players to play")
     elif newplayername == '-1':
-        playerlist = []
+        playernamelist = []
         roleslist = []
         print("All names reset, please input all player names again")
     else:
-        if newplayername not in playerlist:
+        if newplayername not in playernamelist:
             print(f"Name: {newplayername}")
-            playerlist.append(newplayername)
+            playernamelist.append(newplayername)
             roleslist.append(0)
-            living.append(True)
             if newplayername == '`dev`':
                 print("devmode activated")
                 devmode = True
@@ -81,7 +80,7 @@ while True:
 
 # Roles setup
 
-playernum = len(playerlist)
+playernum = len(playernamelist)
 werewolfnum = playernum // 4
 if werewolfnum <= 0:
     werewolfnum = 1
@@ -117,16 +116,11 @@ for i in range(len(roleslist)):
     else:
         roleslist[i] = otherroleslist.pop(randint(0, len(otherroleslist) - 1))
 
-# Medic protection list
 
-protectlist = []
+# Player Instantiation
+
 for i in range(playernum):
-    protectlist.append(False)
-protectlistreset = protectlist
-
-# Survivor Protection Variable
-
-survivorprotectavailable = [True]
+    playerlist.append(Player(i, playernamelist[i], roleslist[i]))
 
 
 
@@ -138,12 +132,6 @@ night = 1
 
 # Subroutines
 
-def die(playerid):
-    print(f"Player {playerlist[playerid]} has died. They were a {rolenames[roleslist[playerid]]}")
-    living[playerid] = False
-    if roleslist[playerid] == 4:
-        hunterdeathact(playerid)
-
 def playerselectnotself(playerid):
     selectid = 0 # Placeholder in case of error
 
@@ -154,13 +142,13 @@ def playerselectnotself(playerid):
         if selectname == '':
             displaynames()
         else:
-            for i in range(len(playerlist)):
-                if playerlist[i] == selectname:
+            for i in range(playernum):
+                if playerlist[i].name == selectname:
                     if i == playerid:
                         print("You can't select yourself")
                         otherflag = True
                     else:
-                        if not living[i]:
+                        if not playerlist[i].living:
                             print(f"Player {selectname} is dead, you can't select them")
                             otherflag = True
                         else:
@@ -184,9 +172,9 @@ def playerselectforvote():
         elif selectname == 'skip':
             return 'skip'
         else:
-            for i in range(len(playerlist)):
-                if playerlist[i] == selectname:
-                    if not living[i]:
+            for i in range(playernum):
+                if playerlist[i].name == selectname:
+                    if not playerlist[i].living:
                         print(f"Player {selectname} is dead, you can't select them")
                         otherflag = True
                     else:
@@ -202,13 +190,13 @@ def checkwin():
     aliveplayersnum = 0
     alivewerewolvesnum = 0
 
-    for life in living:
-        if life:
+    for i in range(playernum):
+        if playerlist[i].living:
             aliveplayersnum += 1
 
-    for i in range(len(roleslist)):
-        if roleslist[i] == 1:
-            if living[i]:
+    for i in range(playernum):
+        if playerlist[i].roleid == 1:
+            if playerlist[i].living:
                 alivewerewolvesnum += 1
 
     anywin = False # If true, either villagers or werewolves have won
@@ -225,7 +213,7 @@ def checkwin():
     return anywin, winid
 
 def privateplayerchoiceprep(playerid):
-    playername = playerlist[playerid]
+    playername = playerlist[playerid].name
     print(f"Pass the device to player {playername}")
     sleep(1)
 
@@ -246,7 +234,7 @@ def privateplayerchoiceprep(playerid):
 def disguiseact():
     print("You will be asked to input two players' names to disguise your role")
     for i in range(2):
-        disguisecode = playerlist[randint(0, playernum-1)]
+        disguisecode = playerlist[randint(0, playernum-1)].name
         while True:
             cmd = input(f"Input the name '{disguisecode}'\n")
             if cmd == disguisecode:
@@ -265,15 +253,15 @@ def werewolfact(playerid):
     werewolfkillvotes.append(killvote)
 
 def werewolfkillconfirmed(deadplayer):
-    print(f"Player {playerlist[deadplayer]} has been killed by the werewolves.")
-    die(deadplayer)
+    print(f"Player {playerlist[deadplayer].name} has been killed by the werewolves.")
+    playerlist[deadplayer].die()
 
 def werewolfkill():
     deadplayer = werewolfkillvotes[randint(0, len(werewolfkillvotes)-1)]
-    if not protectlist[deadplayer]:
+    if not playerlist[deadplayer].protected:
         werewolfkillconfirmed(deadplayer)
     else:
-        print(f"The werewolves attempted to kill {playerlist[deadplayer]}, but they were protected")
+        print(f"The werewolves attempted to kill {playerlist[deadplayer].name}, but they were protected")
 
 
 def naughtygirlact(playerid):
@@ -286,21 +274,21 @@ def naughtygirlact(playerid):
         else:
             print("You can't select the same player again")
 
-    roleslist[select1], roleslist[select2] = roleslist[select2], roleslist[select1]
+    playerlist[select1].roleid, playerlist[select2].roleid = playerlist[select2].roleid, playerlist[select1].roleid
 
 
 def drunkact(playerid):
     print("You will select another player and swap your own role with theirs")
     select = playerselectnotself(playerid)
 
-    roleslist[playerid], roleslist[select] = roleslist[select], roleslist[playerid]
+    playerlist[playerid].roleid, playerlist[select].roleid = playerlist[select].roleid, playerlist[playerid].roleid
 
 
 def hunterdeathact(playerid):
     print("The Hunter has died, and can now select a player to kill")
     select = playerselectnotself(playerid)
-    print(f"You chose to kill player {playerlist[select]}")
-    die(select)
+    print(f"You chose to kill player {playerlist[select].name}")
+    playerlist[select].die()
 
 
 def sheriffact(playerid):
@@ -312,41 +300,39 @@ def sheriffact(playerid):
     killconfirm = intinputvalidate("Would you like to try to kill someone tonight? (1=Yes, 0=No)\n", 0, 1)
     if killconfirm:
         select = playerselectnotself(playerid)
-        if roleslist[select] == 1 or roleslist[select] == 5 or roleslist[select] == 8: # Hit
-            living[select] = False
+        if playerlist[select].roleid == 1 or playerlist[select].roleid == 5 or playerlist[select].roleid == 8: # Hit
             hit = True
         else: # Miss
-            living[playerid] = False
             select = playerid # Returns the sheriff as the dead player
 
     return killconfirm, hit, select
 
 
 def medicact(playerid):
-    print("You are the medic, and can choose a player this round (not yourself) to protect them from being killed by werewolves (other killing roles may bypass your protection)")
+    print("You are the medic, and can choose a player this round (not yourself) to protect them from being killed this night (some killing roles may bypass your protection)")
     select = playerselectnotself(playerid)
-    print(f"Player {playerlist[select]} will be protected from werewolves this round")
-    protectlist[select] = True
+    print(f"Player {playerlist[select]} will be protected this round")
+    playerlist[select].protected = True
 
 
 def survivoract(playerid):
     print("You are the survivor. You are a neutral, and only win if you are alive when the game ends, whether the werewolves or villagers win")
     sleep(1)
-    if survivorprotectavailable[0]:
+    if playerlist[playerid].survivorprotectavailable:
         print("You can protect yourself from death for one night in the game")
         protectconfirm = intinputvalidate("Would you like to protect yourself tonight? (1=Yes, 0=No)\n", 0, 1)
         if protectconfirm:
-            protectlist[playerid] = True
-            survivorprotectavailable[0] = False
+            playerlist[playerid].protected = True
+            playerlist[playerid].survivorprotectavailable = False
     else:
         print("You have already used your one time protection this game, and can no longer act during the night. Try not to die")
         disguiseact()
 
 
 def vote(playerid):
-    if roleslist[playerid] != 1 and roleslist[playerid] != 5:
+    if playerlist[playerid].roleid != 1 and playerlist[playerid].roleid != 5:
         print("You can select a player to vote who you think is a werewolf, or you can skip vote. Remember, if a jester is voted out then they will win")
-    elif roleslist[playerid] == 1:
+    elif playerlist[playerid].roleid == 1:
         print("You can vote someone out of the game, votes are private so don't vote for another werewolf, or you can skip vote. Remember, if a jester is voted out then they will win")
     else:
         print("You are the jester, so if you get voted out you will win. Voting yourself is likely the best option here, however you are allowed to vote for anyone or skip vote")
@@ -365,8 +351,11 @@ while run:
 
     werewolfkillvotes = [] # Resets werewolf kill votes at the start of the game loop
     sheriffresult = [False, False, -1] # Resets sheriff result at the start of the game loop
-    protectlist = protectlistreset # Resets medic protection list at the start of the game loop
-    roleslistnightcopy = roleslist[:] # Copy of roleslist for this night that won't be changed when roles are swapped around
+    roleslistnightcopy = [] # List of player roles that won't change if roles are swapped during the night
+    for i in range(playernum):
+        roleslistnightcopy.append(playerlist[i].roleid)
+        playerlist[i].protected = False # Resets protection list at the start of the game loop
+
 
     # Werewolf ally list updates at start of night
     werewolfallylist = []
@@ -375,14 +364,14 @@ while run:
             werewolfallylist.append(playerlist[j])
 
     for i in range(playernum):
-        playername = playerlist[i] # For easy use in the for loop
+        playername = playerlist[i].name # For easy use in the for loop
 
         # Night number stays at top for the whole night
         clearscreen()
         print(f"Night {night}\n")
         sleep(1)
 
-        if living[i]:
+        if playerlist[i].living:
             privateplayerchoiceprep(i)
 
             print(f"Player {playername}, you are a {rolenames[roleslistnightcopy[i]]}")
@@ -438,14 +427,13 @@ while run:
     # Possible sheriff kill
     if sheriffresult[0]: # If the sheriff attempted to kill someone
         if sheriffresult[1]: # If the sheriff correctly killed non-town
-            if protectlist[sheriffresult[2]]:
-                print(f"The sheriff attempted to kill player {playerlist[sheriffresult[2]]}, but they were protected")
+            if playerlist[sheriffresult[2]].protected:
+                print(f"The sheriff attempted to kill player {playerlist[sheriffresult[2]].name}, but they were protected")
             else:
-                print(f"The sheriff correctly killed player {playerlist[sheriffresult[2]]}")
-                die(sheriffresult[2])
+                print(f"The sheriff correctly killed player {playerlist[sheriffresult[2]].name}")
         else: # The sheriff incorrectly shot and killed themselves
-            print(f"The sheriff {playerlist[sheriffresult[2]]} attempted to shoot an innocent and instead killed themself")
-            die(sheriffresult[2])
+            print(f"The sheriff {playerlist[sheriffresult[2]].name} attempted to shoot an innocent and instead killed themself")
+        playerlist[sheriffresult[2]].die()
         sleep(1)
 
     checkwinresult = checkwin()
@@ -462,7 +450,7 @@ while run:
             print(f"Day {night}\n")  # Night counter = Day counter
             sleep(1)
 
-            if living[i]:
+            if playerlist[i].living:
                 privateplayerchoiceprep(i)
 
                 playervote = vote(i)
@@ -476,7 +464,7 @@ while run:
                     votelist.append([playervote, 1])
 
             else:
-                print(f"Player {playerlist[i]} is dead")
+                print(f"Player {playerlist[i].name} is dead")
                 sleep(2)
 
         clearscreen()
@@ -498,8 +486,8 @@ while run:
         if len(votedplayerlist) == 1: # If one player had the most votes
             votedplayer = votedplayerlist[0]
             if votedplayer != 'skip':
-                print(f"Player {playerlist[votedplayer]} was voted out.")
-                die(votedplayer)
+                print(f"Player {playerlist[votedplayer].name} was voted out.")
+                playerlist[votedplayer].die()
                 if roleslist[votedplayer] == 5:
                     jesterwin = True
                     run = False
@@ -507,8 +495,8 @@ while run:
                 print("The players chose to skip the vote")
         else: # In case of a tie
             print(f"There was a tie in votes between {len(votedplayerlist)} players:")
-            for name in votedplayerlist:
-                print(name)
+            for playerid in votedplayerlist:
+                print(playerlist[playerid].name)
             print("Because there was a tie in votes, no one will be removed from the game")
 
         checkwinresult = checkwin()
@@ -536,7 +524,7 @@ sleep(1)
 # Survivor win
 for i in range(playernum):
     if roleslist[i] == 8:
-        if living[i]:
-            print(f"Player {playerlist[i]} also won, as they were the survivor and lived to the end of the game!")
+        if playerlist[i].living:
+            print(f"Player {playerlist[i].name} also won, as they were the survivor and lived to the end of the game!")
 
 sleep(10)
