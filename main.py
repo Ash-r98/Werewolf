@@ -21,13 +21,22 @@ def clearscreen():
 
 class Player:
     def __init__(self, newplayerid, newname, newroleid):
-        self.playerid = newplayerid
+        # Object creation values
+        self.playerid = newplayerid # ID in playerlist
         self.name = newname
         self.roleid = newroleid
+
+        # Universal attributes
         self.living = True
-        self.protected = False
-        if self.roleid == 8:
-            self.survivorprotectavailable = True
+        self.protected = False # Protection from death, reset at the start of each night
+
+        # Survivor attribute
+        self.survivorprotectavailable = True # Does the survivor still have their one time protect
+
+        # Guardian Angel attributes
+        self.guardianangelprotectavailable = True # Does the guardian angel still have their one time protect
+        self.guardianangelprotectingid = None # If role is guardian angel, this is the id of person you are protecting
+        self.guardian = False # If you have a guardian angel protecting you then True
 
     def die(self):
         self.living = False
@@ -35,11 +44,11 @@ class Player:
         if self.roleid == 4:
             hunterdeathact(self.playerid)
 
-# Roles: 0 - Villager, 1 - Werewolf, 2 - Naughty Girl, 3 - Drunk, 4 - Hunter, 5 - Jester, 6 - Sheriff, 7 - Medic, 8 - Survivor
+# Roles: 0 - Villager, 1 - Werewolf, 2 - Naughty Girl, 3 - Drunk, 4 - Hunter, 5 - Jester, 6 - Sheriff, 7 - Medic, 8 - Survivor, 9 - Guardian Angel
 # Town: Villager, Naughty Girl, Drunk, Hunter, Sheriff, Medic
-# Neutral: Jester, Survivor
+# Neutral: Jester, Survivor, Guardian Angel
 # Evil: Werewolf
-rolenames = ["Villager", "Werewolf", "Naughty Girl", "Drunk", "Hunter", "Jester", "Sheriff", "Medic", "Survivor"]
+rolenames = ["Villager", "Werewolf", "Naughty Girl", "Drunk", "Hunter", "Jester", "Sheriff", "Medic", "Survivor", "Guardian Angel"]
 
 playerlist = []
 playernamelist = []
@@ -105,7 +114,9 @@ for i in range(len(roleslist)):
 
 # Other roles
 
-otherroleslist = [0, 2, 3, 4, 5, 6, 7, 8]
+guardianangelid = Nona
+
+otherroleslist = [0, 2, 3, 4, 5, 6, 7, 8, 9]
 if playernum - werewolfnum > len(otherroleslist):
     for i in range(playernum - werewolfnum - len(otherroleslist)):
         otherroleslist.append(0)  # Adds a villager for each extra player
@@ -115,6 +126,8 @@ for i in range(len(roleslist)):
         continue
     else:
         roleslist[i] = otherroleslist.pop(randint(0, len(otherroleslist) - 1))
+        if roleslist[i] == 9: # Guardian Angel
+            guardianangelid = i
 
 
 # Player Instantiation
@@ -122,6 +135,16 @@ for i in range(len(roleslist)):
 for i in range(playernum):
     playerlist.append(Player(i, playernamelist[i], roleslist[i]))
 
+
+# Guardian Angel Selection
+
+if guardianangelid != None:
+    while True:
+        guardianangelprotectingid = randint(0, playernum-1)
+        if guardianangelprotectingid != guardianangelid:
+            break
+    playerlist[guardianangelprotectingid].guardian = True
+    playerlist[guardianangelid].guardianangelprotectingid = guardianangelprotectingid
 
 
 print("\nAll roles have been allocated.")
@@ -329,6 +352,10 @@ def survivoract(playerid):
         disguiseact()
 
 
+def guardianangelact(playerid):
+    pass
+
+
 def vote(playerid):
     if playerlist[playerid].roleid != 1 and playerlist[playerid].roleid != 5:
         print("You can select a player to vote who you think is a werewolf, or you can skip vote. Remember, if a jester is voted out then they will win")
@@ -403,6 +430,8 @@ while run:
                     medicact(i)
                 case 8: # Survivor
                     survivoract(i)
+                case 9: # Guardian Angel
+                    guardianangelact(i)
                 case _:
                     print("Role not found")
 
