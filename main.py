@@ -114,7 +114,7 @@ for i in range(len(roleslist)):
 
 # Other roles
 
-guardianangelid = Nona
+guardianangelid = None
 
 otherroleslist = [0, 2, 3, 4, 5, 6, 7, 8, 9]
 if playernum - werewolfnum > len(otherroleslist):
@@ -342,7 +342,7 @@ def survivoract(playerid):
     print("You are the survivor. You are a neutral, and only win if you are alive when the game ends, whether the werewolves or villagers win")
     sleep(1)
     if playerlist[playerid].survivorprotectavailable:
-        print("You can protect yourself from death for one night in the game")
+        print("You can protect yourself from death for one night this game")
         protectconfirm = intinputvalidate("Would you like to protect yourself tonight? (1=Yes, 0=No)\n", 0, 1)
         if protectconfirm:
             playerlist[playerid].protected = True
@@ -353,7 +353,19 @@ def survivoract(playerid):
 
 
 def guardianangelact(playerid):
-    pass
+    protectingplayerid = playerlist[playerid].guardianangelprotectingid
+    print(f"You are the Guardian Angel, and you are protecting Player {playerlist[protectingplayerid].name}, who is a {rolenames[playerlist[protectingplayerid].roleid]}. You can only win if this player wins.")
+    print("They know they have a guardian angel, but don't know who you are. If they die, you will become a Survivor")
+    print()
+    if playerlist[playerid].guardianangelprotectavailable:
+        print("You can protect this player from death for one night this game")
+        protectconfirm = intinputvalidate("Would you like to protect them tonight? (1=Yes, 0=No)\n", 0, 1)
+        if protectconfirm:
+            playerlist[protectingplayerid].protected = True
+            playerlist[playerid].guardianangelprotectavailable = False
+    else:
+        print("You have already used your one time protection this game, and can no longer act during the night. Hope they don't die")
+        disguiseact()
 
 
 def vote(playerid):
@@ -378,6 +390,12 @@ while run:
 
     werewolfkillvotes = [] # Resets werewolf kill votes at the start of the game loop
     sheriffresult = [False, False, -1] # Resets sheriff result at the start of the game loop
+
+    for i in range(playernum):
+        if playerlist[i].roleid == 9:
+            if not playerlist[playerlist[i].guardianangelprotectingid].living:
+                playerlist[i].roleid = 8
+
     roleslistnightcopy = [] # List of player roles that won't change if roles are swapped during the night
     for i in range(playernum):
         roleslistnightcopy.append(playerlist[i].roleid)
@@ -403,6 +421,11 @@ while run:
 
             print(f"Player {playername}, you are a {rolenames[roleslistnightcopy[i]]}")
             sleep(1)
+
+            if playerlist[i].guardian:
+                print("You have a Guardian Angel who is trying to help you win. They know you and your role but you don't know who they are")
+                sleep(1)
+
             match roleslistnightcopy[i]:
                 case 0: # Villager
                     disguiseact()
