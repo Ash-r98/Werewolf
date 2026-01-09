@@ -19,6 +19,22 @@ def intinputvalidate(prompt, lower, upper):
 def clearscreen():
     os.system('cls' if os.name == 'nt' else 'clear') # Wipe terminal
 
+class Player:
+    def __init__(self, newplayerid, newname, newroleid):
+        self.playerid = newplayerid
+        self.name = newname
+        self.roleid = newroleid
+        self.living = True
+        self.protected = False
+        if self.roleid == 8:
+            self.survivorprotectavailable = True
+
+    def die(self):
+        self.living = False
+        print(f"Player {self.name} has died. They were a {rolenames[self.roleid]}")
+        if self.roleid == 4:
+            hunterdeathact(self.playerid)
+
 # Roles: 0 - Villager, 1 - Werewolf, 2 - Naughty Girl, 3 - Drunk, 4 - Hunter, 5 - Jester, 6 - Sheriff, 7 - Medic, 8 - Survivor
 # Town: Villager, Naughty Girl, Drunk, Hunter, Sheriff, Medic
 # Neutral: Jester, Survivor
@@ -249,8 +265,8 @@ def werewolfact(playerid):
     werewolfkillvotes.append(killvote)
 
 def werewolfkillconfirmed(deadplayer):
-    print(f"Player {playerlist[deadplayer]} has been killed by the werewolves. They were a {rolenames[roleslist[deadplayer]]}")
-    living[deadplayer] = False
+    print(f"Player {playerlist[deadplayer]} has been killed by the werewolves.")
+    die(deadplayer)
 
 def werewolfkill():
     deadplayer = werewolfkillvotes[randint(0, len(werewolfkillvotes)-1)]
