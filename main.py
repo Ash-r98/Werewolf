@@ -28,7 +28,6 @@ rolenames = ["Villager", "Werewolf", "Naughty Girl", "Drunk", "Hunter", "Jester"
 playerlist = []
 roleslist = []
 living = []
-nameconfirmation = False
 devmode = False
 
 def displaynames():
@@ -54,14 +53,9 @@ while True:
     else:
         if newplayername not in playerlist:
             print(f"Name: {newplayername}")
-            if nameconfirmation:
-                playernameconfirm = intinputvalidate("Add name to player list? (1=Yes, 0=No)\n", 0, 1)
-            else:
-                playernameconfirm = True
-            if playernameconfirm:
-                playerlist.append(newplayername)
-                roleslist.append(0)
-                living.append(True)
+            playerlist.append(newplayername)
+            roleslist.append(0)
+            living.append(True)
             if newplayername == '`dev`':
                 print("devmode activated")
                 devmode = True
@@ -106,7 +100,6 @@ for i in range(len(roleslist)):
         continue
     else:
         roleslist[i] = otherroleslist.pop(randint(0, len(otherroleslist) - 1))
-roleslist = [2, 1, 3, 0]
 
 # Medic protection list
 
