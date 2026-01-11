@@ -61,6 +61,12 @@ def displaynames():
         print(name)
     print() # Leaves whitespace after names are displayed
 
+def displayroles():
+    print(f"All {len(rolenames)} roles:")
+    for role in rolenames:
+        print(role)
+    print()  # Leaves whitespace after roles are displayed
+
 while True:
     newplayername = input("Input player name: (Input '0' once all players are in or '-1' to reset all names)\n")
     if newplayername == '0':
@@ -153,6 +159,7 @@ clearscreen()
 
 night = 1
 
+
 # Subroutines
 
 def playerselectnotself(playerid):
@@ -183,6 +190,7 @@ def playerselectnotself(playerid):
                 print("Player not found")
     return selectid
 
+
 def playerselectforvote():
     selectid = 0 # Placeholder in case of error
 
@@ -209,6 +217,27 @@ def playerselectforvote():
                 print("Player not found")
     return selectid
 
+
+def roleselect():
+    selectid = 0 # Placeholder in case of error
+
+    while True:
+        flag = False
+        selectrole = input("Input the role you would like to select: (leave empty to display all roles)\n")
+        if selectrole == '':
+            displayroles()
+        else:
+            for i in range(len(rolenames)):
+                if rolenames[i] == selectrole:
+                    selectid = i
+                    flag = True
+            if flag:
+                break
+            else:
+                print("Role not found")
+    return selectid
+
+
 def checkwin():
     aliveplayersnum = 0
     alivewerewolvesnum = 0
@@ -234,6 +263,7 @@ def checkwin():
     # If neither if statement hits, then neither side has won and the game will continue
 
     return anywin, winid
+
 
 def privateplayerchoiceprep(playerid):
     playername = playerlist[playerid].name
@@ -334,7 +364,7 @@ def sheriffact(playerid):
 def medicact(playerid):
     print("You are the medic, and can choose a player this round (not yourself) to protect them from being killed this night (some killing roles may bypass your protection)")
     select = playerselectnotself(playerid)
-    print(f"Player {playerlist[select]} will be protected this round")
+    print(f"Player {playerlist[select].name} will be protected this round")
     playerlist[select].protected = True
 
 
@@ -378,6 +408,22 @@ def vote(playerid):
 
     votedplayer = playerselectforvote()
     return votedplayer
+
+
+def snipe(playerid):
+    # Return: Snipe attempt true/false, snipe succeed true/false, id of sniped player on hit/sniper on miss
+
+    print("You are a werewolf, so if you believe you know another player's role, you can guess it to kill them instantly. However, if you are incorrect then you will die instead")
+    snipeconfirm = intinputvalidate("Would you like to guess another player's role? (1=Yes, 0=No)\n", 0, 1)
+    if snipeconfirm:
+        snipedplayerid = playerselectnotself(playerid)
+        snipedplayerrole = roleselect()
+        if playerlist[snipedplayerid].roleid == snipedplayerrole:
+            return True, True, snipedplayerid
+        else:
+            return True, False, playerid
+    else:
+        return False, False, -1
 
 
 # Game Loop
@@ -497,6 +543,7 @@ while run:
         input("Press enter when everyone is ready to vote\n")
 
         votelist = []
+        sniperesultlist = []
         for i in range(playernum):
             clearscreen()
             print(f"Day {night}\n")  # Night counter = Day counter
@@ -504,6 +551,9 @@ while run:
 
             if playerlist[i].living:
                 privateplayerchoiceprep(i)
+
+                if playerlist[i].roleid == 1:
+                    sniperesultlist.append(snipe(i))
 
                 playervote = vote(i)
 
@@ -550,6 +600,14 @@ while run:
             for playerid in votedplayerlist:
                 print(playerlist[playerid].name)
             print("Because there was a tie in votes, no one will be removed from the game")
+
+        if len(sniperesultlist) > 0:
+            if sniperesultlist[i][0]:
+                if sniperesultlist[i][1]:
+                    print(f"A werewolf correctly guessed the role of player {playerlist[sniperesultlist[i][2]].name}")
+                else:
+                    print(f"Player {playerlist[sniperesultlist[i][2]].name} attempted to guess another player's role but was incorrect")
+                playerlist[sniperesultlist[i][2]].die()
 
         checkwinresult = checkwin()
         if checkwinresult[0]:
