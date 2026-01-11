@@ -150,7 +150,8 @@ if guardianangelid != None:
         if guardianangelprotectingid != guardianangelid:
             break
     playerlist[guardianangelprotectingid].guardian = True
-    playerlist[guardianangelid].guardianangelprotectingid = guardianangelprotectingid
+    for i in range(playernum): # Applies to all players in case the guardian angel role is swapped
+        playerlist[i].guardianangelprotectingid = guardianangelprotectingid
 
 
 print("\nAll roles have been allocated.")
