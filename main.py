@@ -49,6 +49,9 @@ class Player:
 # Neutral: Jester, Survivor, Guardian Angel
 # Evil: Werewolf
 rolenames = ["Villager", "Werewolf", "Naughty Girl", "Drunk", "Hunter", "Jester", "Sheriff", "Medic", "Survivor", "Guardian Angel"]
+townrolelist = [0, 2, 3, 4, 6, 7]
+neutralrolelist = [5, 8, 9]
+evilrolelist = [1]
 
 playerlist = []
 playernamelist = []
@@ -248,7 +251,7 @@ def checkwin():
             aliveplayersnum += 1
 
     for i in range(playernum):
-        if playerlist[i].roleid == 1:
+        if playerlist[i].roleid in evilrolelist:
             if playerlist[i].living:
                 alivewerewolvesnum += 1
 
@@ -301,17 +304,17 @@ def werewolfact(playerid):
     print("You must select a player to vote to kill them. One of the voted players will be killed at random")
 
     for i in range(len(werewolfkillvotes)):
-        print(f"Werewolf {i+1} voted to kill {playerlist[werewolfkillvotes[i]]} this night")
+        print(f"Werewolf {playerlist[werewolfkillvotes[i][1]]} voted to kill {playerlist[werewolfkillvotes[i][0]]} this night")
 
     killvote = playerselectnotself(playerid)
-    werewolfkillvotes.append(killvote)
+    werewolfkillvotes.append([killvote, playerid])
 
 def werewolfkillconfirmed(deadplayer):
     print(f"Player {playerlist[deadplayer].name} has been killed by the werewolves.")
     playerlist[deadplayer].die()
 
 def werewolfkill():
-    deadplayer = werewolfkillvotes[randint(0, len(werewolfkillvotes)-1)]
+    deadplayer = werewolfkillvotes[randint(0, len(werewolfkillvotes)-1)][0]
     if not playerlist[deadplayer].protected:
         werewolfkillconfirmed(deadplayer)
     else:
@@ -354,7 +357,7 @@ def sheriffact(playerid):
     killconfirm = intinputvalidate("Would you like to try to kill someone tonight? (1=Yes, 0=No)\n", 0, 1)
     if killconfirm:
         select = playerselectnotself(playerid)
-        if playerlist[select].roleid == 1 or playerlist[select].roleid == 5 or playerlist[select].roleid == 8: # Hit
+        if playerlist[select].roleid in evilrolelist or playerlist[select].roleid in neutralrolelist: # Hit
             hit = True
         else: # Miss
             select = playerid # Returns the sheriff as the dead player
