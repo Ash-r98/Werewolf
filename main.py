@@ -94,10 +94,13 @@ while True:
         if newplayername not in playernamelist:
             print(f"Name: {newplayername}")
             playernamelist.append(newplayername)
-            roleslist.append(0)
             if newplayername == '`dev`':
                 print("devmode activated")
                 devmode = True
+            if devmode:
+                roleslist.append(int(input("Input role id:\n")))
+            else:
+                roleslist.append(0)
         else:
             print("Name is already taken")
 
@@ -110,39 +113,49 @@ if werewolfnum <= 0:
     werewolfnum = 1
 
 
-# Werewolf setup
+# Werewolf setup variables
 
 werewolfkillvotes = []
-
 werewolfidlist = []
-for i in range(werewolfnum):
-    while True:
-        newwerewolfid = randint(0, playernum-1)
-        if newwerewolfid not in werewolfidlist:
-            werewolfidlist.append(newwerewolfid)
-            break
 
-for i in range(len(roleslist)):
-    if i in werewolfidlist:
-        evilroleselect = randint(0, len(evilrolelist)-1)
-        roleslist[i] = evilrolelist[evilroleselect]
-
-
-# Other roles
+# Other roles setup variables
 
 guardianangelid = None
-
 otherroleslist = townrolelist + neutralrolelist
-if playernum - werewolfnum > len(otherroleslist):
-    for i in range(playernum - werewolfnum - len(otherroleslist)):
-        otherroleslist.append(0)  # Adds a villager for each extra player
 
-for i in range(len(roleslist)):
-    if roleslist[i] in evilrolelist:
-        continue
-    else:
-        roleslist[i] = otherroleslist.pop(randint(0, len(otherroleslist) - 1))
-        if roleslist[i] == 9: # Guardian Angel
+if not devmode:
+    # Werewolf setup
+
+    for i in range(werewolfnum):
+        while True:
+            newwerewolfid = randint(0, playernum-1)
+            if newwerewolfid not in werewolfidlist:
+                werewolfidlist.append(newwerewolfid)
+                break
+
+    for i in range(len(roleslist)):
+        if i in werewolfidlist:
+            evilroleselect = randint(0, len(evilrolelist)-1)
+            roleslist[i] = evilrolelist[evilroleselect]
+
+
+    # Other roles
+
+    if playernum - werewolfnum > len(otherroleslist):
+        for i in range(playernum - werewolfnum - len(otherroleslist)):
+            otherroleslist.append(0)  # Adds a villager for each extra player
+
+    for i in range(len(roleslist)):
+        if roleslist[i] in evilrolelist:
+            continue
+        else:
+            roleslist[i] = otherroleslist.pop(randint(0, len(otherroleslist) - 1))
+            if roleslist[i] == 9:  # Guardian Angel
+                guardianangelid = i
+
+else: # Devmode role setup
+    for i in range(playernum):
+        if roleslist[i] == 9:
             guardianangelid = i
 
 
@@ -297,6 +310,8 @@ def privateplayerchoiceprep(playerid):
 
 def disguiseact():
     print("You will be asked to input two players' names to disguise your role")
+    sleep(1)
+
     for i in range(2):
         disguisecode = playerlist[randint(0, playernum-1)].name
         while True:
@@ -309,9 +324,11 @@ def disguiseact():
 
 def werewolfact(playerid):
     print("You must select a player to vote to kill them. One of the voted players will be killed at random")
+    sleep(1)
 
     for i in range(len(werewolfkillvotes)):
         print(f"Werewolf {playerlist[werewolfkillvotes[i][1]]} voted to kill {playerlist[werewolfkillvotes[i][0]]} this night")
+        sleep(1)
 
     killvote = playerselectnotself(playerid)
     werewolfkillvotes.append([killvote, playerid])
@@ -334,6 +351,8 @@ def werewolfkill():
 
 def naughtygirlact(playerid):
     print("You will select two other players (not yourself) and swap their roles")
+    sleep(1)
+
     select1 = playerselectnotself(playerid)
     while True:
         select2 = playerselectnotself(playerid)
@@ -347,6 +366,8 @@ def naughtygirlact(playerid):
 
 def drunkact(playerid):
     print("You will select another player and swap your own role with theirs")
+    sleep(1)
+
     select = playerselectnotself(playerid)
 
     playerlist[playerid].roleid, playerlist[select].roleid = playerlist[select].roleid, playerlist[playerid].roleid
@@ -354,6 +375,8 @@ def drunkact(playerid):
 
 def hunterdeathact(playerid):
     print("The Hunter has died, and can now select a player to kill")
+    sleep(1)
+
     select = playerselectnotself(playerid)
     print(f"You chose to kill player {playerlist[select].name}")
     playerlist[select].die()
@@ -365,6 +388,8 @@ def sheriffact(playerid):
     select = -1
 
     print("You can choose a player to kill, but if you select an innocent you will die instead: You can freely kill any neutral or evil roles")
+    sleep(1)
+
     killconfirm = intinputvalidate("Would you like to try to kill someone tonight? (1=Yes, 0=No)\n", 0, 1)
     if killconfirm:
         select = playerselectnotself(playerid)
@@ -378,6 +403,8 @@ def sheriffact(playerid):
 
 def medicact(playerid):
     print("You can choose a player this round (not yourself) to protect them from being killed this night (some killing roles may bypass your protection)")
+    sleep(1)
+
     select = playerselectnotself(playerid)
     print(f"Player {playerlist[select].name} will be protected this round")
     playerlist[select].protected = True
@@ -386,35 +413,45 @@ def medicact(playerid):
 def survivoract(playerid):
     print("You are a neutral, and only win if you are alive when the game ends, whether the werewolves or villagers win")
     sleep(1)
+
     if playerlist[playerid].survivorprotectavailable:
         print("You can protect yourself from death for one night this game")
+        sleep(1)
+
         protectconfirm = intinputvalidate("Would you like to protect yourself tonight? (1=Yes, 0=No)\n", 0, 1)
         if protectconfirm:
             playerlist[playerid].protected = True
             playerlist[playerid].survivorprotectavailable = False
     else:
         print("You have already used your one time protection this game, and can no longer act during the night. Try not to die")
+        sleep(1)
         disguiseact()
 
 
 def guardianangelact(playerid):
     protectingplayerid = playerlist[playerid].guardianangelprotectingid
     print(f"You are protecting Player {playerlist[protectingplayerid].name}, who is a {rolenames[playerlist[protectingplayerid].roleid]}. You can only win if this player wins.")
+    sleep(1)
     print("They know they have a guardian angel, but don't know who you are. If they die, you will become a Survivor")
+    sleep(1)
     print()
     if playerlist[playerid].guardianangelprotectavailable:
         print("You can protect this player from death for one night this game")
+        sleep(1)
         protectconfirm = intinputvalidate("Would you like to protect them tonight? (1=Yes, 0=No)\n", 0, 1)
         if protectconfirm:
             playerlist[protectingplayerid].protected = True
             playerlist[playerid].guardianangelprotectavailable = False
     else:
         print("You have already used your one time protection this game, and can no longer act during the night. Hope they don't die")
+        sleep(1)
         disguiseact()
 
 
 def altruistact(playerid):
     print("You can choose to redirect tonight's werewolf kill to kill you instead")
+    sleep(1)
+
     altruistconfirm = intinputvalidate("Would you like to sacrifice yourself tonight? (1=Yes, 0=No)\n", 0, 1)
     if altruistconfirm:
         print("You will be remembered.")
@@ -487,7 +524,7 @@ while run:
     # Werewolf ally list updates at start of night
     werewolfallylist = []
     for j in range(len(roleslist)):
-        if roleslist[j] == 1:
+        if roleslist[j] in evilrolelist:
             werewolfallylist.append(playerlist[j])
 
     for i in range(playernum):
@@ -561,6 +598,7 @@ while run:
         else:
             print(f"Player {playername} is dead.")
 
+        sleep(1)
         input("Press enter when you are ready to end your action and move on to the next player:\n")
 
     # End of night
