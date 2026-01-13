@@ -38,6 +38,9 @@ class Player:
         self.guardianangelprotectingid = None # If role is guardian angel, this is the id of person you are protecting
         self.guardian = False # If you have a guardian angel protecting you then True
 
+        # Guesser wolf attributes
+        self.doubleshotavailable = True
+
     def die(self):
         self.living = False
         if self.roleid == 0 or self.roleid in evilrolelist: # Can be multiple villagers/werewolves
@@ -47,14 +50,14 @@ class Player:
         if self.roleid == 4:
             hunterdeathact(self.playerid)
 
-# Roles: 0 - Villager, 1 - Werewolf, 2 - Naughty Girl, 3 - Drunk, 4 - Hunter, 5 - Jester, 6 - Sheriff, 7 - Medic, 8 - Survivor, 9 - Guardian Angel, 10 - Altruist
+# Roles: 0 - Villager, 1 - Werewolf, 2 - Naughty Girl, 3 - Drunk, 4 - Hunter, 5 - Jester, 6 - Sheriff, 7 - Medic, 8 - Survivor, 9 - Guardian Angel, 10 - Altruist, 11 - Guesser Wolf
 # Town: Villager, Naughty Girl, Drunk, Hunter, Sheriff, Medic
 # Neutral: Jester, Survivor, Guardian Angel
 # Evil: Werewolf
-rolenames = ["Villager", "Werewolf", "Naughty Girl", "Drunk", "Hunter", "Jester", "Sheriff", "Medic", "Survivor", "Guardian Angel", "Altruist"]
+rolenames = ["Villager", "Werewolf", "Naughty Girl", "Drunk", "Hunter", "Jester", "Sheriff", "Medic", "Survivor", "Guardian Angel", "Altruist", "Guesser Wolf"]
 townrolelist = [0, 2, 3, 4, 6, 7, 10]
 neutralrolelist = [5, 8, 9]
-evilrolelist = [1]
+evilrolelist = [1, 11]
 
 playerlist = []
 playernamelist = []
@@ -121,7 +124,9 @@ for i in range(werewolfnum):
 
 for i in range(len(roleslist)):
     if i in werewolfidlist:
-        roleslist[i] = 1
+        evilroleselect = randint(0, len(evilrolelist)-1)
+        evilroleselect = 1
+        roleslist[i] = evilrolelist[evilroleselect]
 
 
 # Other roles
@@ -134,7 +139,7 @@ if playernum - werewolfnum > len(otherroleslist):
         otherroleslist.append(0)  # Adds a villager for each extra player
 
 for i in range(len(roleslist)):
-    if roleslist[i] == 1:
+    if roleslist[i] in evilrolelist:
         continue
     else:
         roleslist[i] = otherroleslist.pop(randint(0, len(otherroleslist) - 1))
@@ -420,12 +425,13 @@ def altruistact(playerid):
 
 
 def vote(playerid):
-    if playerlist[playerid].roleid != 1 and playerlist[playerid].roleid != 5:
+    if playerlist[playerid].roleid not in evilrolelist and playerlist[playerid].roleid != 5:
         print("You can select a player to vote who you think is a werewolf, or you can skip vote. Remember, if a jester is voted out then they will win")
-    elif playerlist[playerid].roleid == 1:
+    elif playerlist[playerid].roleid in evilrolelist:
         print("You can vote someone out of the game, votes are private so don't vote for another werewolf, or you can skip vote. Remember, if a jester is voted out then they will win")
     else:
         print("You are the jester, so if you get voted out you will win. Voting yourself is likely the best option here, however you are allowed to vote for anyone or skip vote")
+    sleep(1)
 
     votedplayer = playerselectforvote()
     return votedplayer
@@ -435,6 +441,15 @@ def snipe(playerid):
     # Return: Snipe attempt true/false, snipe succeed true/false, id of sniped player on hit/sniper on miss
 
     print("You are a werewolf, so if you believe you know another player's role, you can guess it to kill them instantly. However, if you are incorrect then you will die instead")
+    sleep(1)
+
+    if playerlist[playerid].roleid == 11:
+        if playerlist[playerid].doubleshotavailable:
+            print("Because you are the Guesser Wolf, you are protected for one incorrect guess this game")
+        else:
+            print("You are the Guesser Wolf, but you have already used your one incorrect guess this game")
+        sleep(1)
+
     snipeconfirm = intinputvalidate("Would you like to guess another player's role? (1=Yes, 0=No)\n", 0, 1)
     if snipeconfirm:
         snipedplayerid = playerselectnotself(playerid)
@@ -528,6 +543,19 @@ while run:
                     guardianangelact(i)
                 case 10: # Altruist
                     altruistresult = altruistact(i)
+                case 11: # Guesser Wolf
+                    if playerlist[i].doubleshotavailable:
+                        print("You are a werewolf ally who gets a second life when guessing roles")
+                    else:
+                        print("You have used up your guessing second life. Be cautious when guessing again")
+
+                    # Displays all werewolf allies
+                    if len(werewolfallylist) > 1:
+                        print("The werewolves are:")
+                        for ally in werewolfallylist:
+                            print(ally)
+
+                    werewolfact(i)
                 case _:
                     print("Role not found")
 
@@ -579,8 +607,10 @@ while run:
             if playerlist[i].living:
                 privateplayerchoiceprep(i)
 
-                if playerlist[i].roleid == 1:
+                if playerlist[i].roleid in evilrolelist:
                     sniperesultlist.append(snipe(i))
+                    print()
+                    sleep(1)
 
                 playervote = vote(i)
 
@@ -632,9 +662,13 @@ while run:
             if sniperesultlist[i][0]:
                 if sniperesultlist[i][1]:
                     print(f"A werewolf correctly guessed the role of player {playerlist[sniperesultlist[i][2]].name}")
+                    playerlist[sniperesultlist[i][2]].die()
                 else:
-                    print(f"Player {playerlist[sniperesultlist[i][2]].name} attempted to guess another player's role but was incorrect")
-                playerlist[sniperesultlist[i][2]].die()
+                    if playerlist[sniperesultlist[i][2]].roleid == 11 and playerlist[sniperesultlist[i][2]].doubleshotavailable: # If role is Guesser Wolf and they have their double shot available
+                        playerlist[sniperesultlist[i][2]].doubleshotavailable = False # Double shot is used up
+                    else:
+                        print(f"Player {playerlist[sniperesultlist[i][2]].name} attempted to guess another player's role but was incorrect")
+                        playerlist[sniperesultlist[i][2]].die()
 
         checkwinresult = checkwin()
         if checkwinresult[0]:
