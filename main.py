@@ -50,12 +50,12 @@ class Player:
         if self.roleid == 4:
             hunterdeathact(self.playerid)
 
-# Roles: 0 - Villager, 1 - Werewolf, 2 - Naughty Girl, 3 - Drunk, 4 - Hunter, 5 - Jester, 6 - Sheriff, 7 - Medic, 8 - Survivor, 9 - Guardian Angel, 10 - Altruist, 11 - Guesser Wolf
+# Roles: 0 - Villager, 1 - Werewolf, 2 - Naughty Girl, 3 - Drunk, 4 - Hunter, 5 - Jester, 6 - Sheriff, 7 - Medic, 8 - Survivor, 9 - Guardian Angel, 10 - Altruist, 11 - Guesser Wolf, 12 - Imitator
 # Town: Villager, Naughty Girl, Drunk, Hunter, Sheriff, Medic
 # Neutral: Jester, Survivor, Guardian Angel
 # Evil: Werewolf
-rolenames = ["Villager", "Werewolf", "Naughty Girl", "Drunk", "Hunter", "Jester", "Sheriff", "Medic", "Survivor", "Guardian Angel", "Altruist", "Guesser Wolf"]
-townrolelist = [0, 2, 3, 4, 6, 7, 10]
+rolenames = ["Villager", "Werewolf", "Naughty Girl", "Drunk", "Hunter", "Jester", "Sheriff", "Medic", "Survivor", "Guardian Angel", "Altruist", "Guesser Wolf", "Imitator"]
+townrolelist = [0, 2, 3, 4, 6, 7, 10, 12]
 neutralrolelist = [5, 8, 9]
 evilrolelist = [1, 11]
 
@@ -69,6 +69,19 @@ def displaynames():
     for name in playernamelist:
         print(name)
     print() # Leaves whitespace after names are displayed
+
+def imitatordisplaynames():
+    availablelist = []
+
+    for i in range(playernum):
+        if playerlist[i].roleid in townrolelist and not playerlist[i].living:
+            availablelist.append(i)
+
+    print(f"All {len(availablelist)} available players:")
+    for id in availablelist:
+        print(playerlist[id].name)
+    print() # Leaves whitespace after names are displayed
+
 
 def displayroles():
     print(f"All {len(rolenames)} roles:")
@@ -460,6 +473,32 @@ def altruistact(playerid):
         return None
 
 
+def imitatoract():
+    imitatorselectid = 0 # Backup value in case of error
+
+    print("You can select a dead player with a town role and use their role next night")
+    sleep(1)
+
+    while True:
+        flag = False
+        imitatorselect = input("Input the name of the player you would like to select: (leave empty to display all available player names)\n")
+        if imitatorselect == '':
+            imitatordisplaynames()
+        else:
+            for i in range(playernum):
+                if playerlist[i].name == imitatorselect:
+                    if playerlist[i].roleid in townrolelist and not playerlist[i].living:
+                        imitatorselectid = i
+                        flag = True
+            if flag:
+                break
+            else:
+                print("Invalid selection")
+
+    print(f"Next night you will act as a {playerlist[imitatorselectid].roleid}")
+    return imitatorselectid
+
+
 def vote(playerid):
     if playerlist[playerid].roleid not in evilrolelist and playerlist[playerid].roleid != 5:
         print("You can select a player to vote who you think is a werewolf, or you can skip vote. Remember, if a jester is voted out then they will win")
@@ -502,6 +541,8 @@ def snipe(playerid):
 
 night = 0
 jesterwin = False
+imitatorselectedroleid = None
+
 run = True
 while run:
     night += 1 # Increments night counter at the start of the game loop, starting at 1
@@ -517,7 +558,13 @@ while run:
 
     roleslistnightcopy = [] # List of player roles that won't change if roles are swapped during the night
     for i in range(playernum):
-        roleslistnightcopy.append(playerlist[i].roleid)
+        if playerlist[i].roleid == 12: # If Imitator
+            if imitatorselectedroleid != None:
+                roleslistnightcopy.append(imitatorselectedroleid)
+            else:
+                roleslistnightcopy.append(playerlist[i].roleid)
+        else:
+            roleslistnightcopy.append(playerlist[i].roleid)
         playerlist[i].protected = False # Resets protection list at the start of the game loop
 
 
@@ -565,9 +612,11 @@ while run:
                     drunkact(i)
                 case 4: # Hunter
                     print("When you die, you will be able to kill a player of your choice. Try to kill a werewolf")
+                    sleep(1)
                     disguiseact()
                 case 5: # Jester
                     print("Your goal is to be voted out by the other players. If this happens you will win, but if you are killed then you lose")
+                    sleep(1)
                     disguiseact()
                 case 6: # Sheriff
                     sheriffresult = sheriffact(i)
@@ -584,14 +633,20 @@ while run:
                         print("You are a werewolf ally who gets a second life when guessing roles")
                     else:
                         print("You have used up your guessing second life. Be cautious when guessing again")
+                    sleep(1)
 
                     # Displays all werewolf allies
                     if len(werewolfallylist) > 1:
                         print("The werewolves are:")
                         for ally in werewolfallylist:
                             print(ally)
+                        sleep(1)
 
                     werewolfact(i)
+                case 12: # Imitator
+                    print("You will be able to take the role of a dead town player during the voting phase to use it the next night")
+                    sleep(1)
+                    disguiseact()
                 case _:
                     print("Role not found")
 
@@ -644,10 +699,13 @@ while run:
             if playerlist[i].living:
                 privateplayerchoiceprep(i)
 
-                if playerlist[i].roleid in evilrolelist:
+                if playerlist[i].roleid in evilrolelist: # Werewolves can guess roles during voting phase
                     sniperesultlist.append(snipe(i))
                     print()
                     sleep(1)
+
+                if playerlist[i].roleid == 12: # Imitator role selection
+                    imitatorselectedroleid = playerlist[imitatoract()].roleid
 
                 playervote = vote(i)
 
