@@ -125,7 +125,6 @@ for i in range(werewolfnum):
 for i in range(len(roleslist)):
     if i in werewolfidlist:
         evilroleselect = randint(0, len(evilrolelist)-1)
-        evilroleselect = 1
         roleslist[i] = evilrolelist[evilroleselect]
 
 
