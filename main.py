@@ -40,16 +40,19 @@ class Player:
 
     def die(self):
         self.living = False
-        print(f"Player {self.name} has died. They were a {rolenames[self.roleid]}")
+        if self.roleid == 0 or self.roleid in evilrolelist: # Can be multiple villagers/werewolves
+            print(f"Player {self.name} has died. They were a {rolenames[self.roleid]}")
+        else: # Only one of each other role
+            print(f"Player {self.name} has died. They were the {rolenames[self.roleid]}")
         if self.roleid == 4:
             hunterdeathact(self.playerid)
 
-# Roles: 0 - Villager, 1 - Werewolf, 2 - Naughty Girl, 3 - Drunk, 4 - Hunter, 5 - Jester, 6 - Sheriff, 7 - Medic, 8 - Survivor, 9 - Guardian Angel
+# Roles: 0 - Villager, 1 - Werewolf, 2 - Naughty Girl, 3 - Drunk, 4 - Hunter, 5 - Jester, 6 - Sheriff, 7 - Medic, 8 - Survivor, 9 - Guardian Angel, 10 - Altruist
 # Town: Villager, Naughty Girl, Drunk, Hunter, Sheriff, Medic
 # Neutral: Jester, Survivor, Guardian Angel
 # Evil: Werewolf
-rolenames = ["Villager", "Werewolf", "Naughty Girl", "Drunk", "Hunter", "Jester", "Sheriff", "Medic", "Survivor", "Guardian Angel"]
-townrolelist = [0, 2, 3, 4, 6, 7]
+rolenames = ["Villager", "Werewolf", "Naughty Girl", "Drunk", "Hunter", "Jester", "Sheriff", "Medic", "Survivor", "Guardian Angel", "Altruist"]
+townrolelist = [0, 2, 3, 4, 6, 7, 10]
 neutralrolelist = [5, 8, 9]
 evilrolelist = [1]
 
@@ -125,7 +128,7 @@ for i in range(len(roleslist)):
 
 guardianangelid = None
 
-otherroleslist = [0, 2, 3, 4, 5, 6, 7, 8, 9]
+otherroleslist = townrolelist + neutralrolelist
 if playernum - werewolfnum > len(otherroleslist):
     for i in range(playernum - werewolfnum - len(otherroleslist)):
         otherroleslist.append(0)  # Adds a villager for each extra player
@@ -316,7 +319,11 @@ def werewolfkillconfirmed(deadplayer):
 def werewolfkill():
     deadplayer = werewolfkillvotes[randint(0, len(werewolfkillvotes)-1)][0]
     if not playerlist[deadplayer].protected:
-        werewolfkillconfirmed(deadplayer)
+        if altruistresult == None:
+            werewolfkillconfirmed(deadplayer)
+        else:
+            print(f"The werewolves attempted to kill {playerlist[deadplayer].name}, but the altruist sacrificed themself")
+            werewolfkillconfirmed(altruistresult)
     else:
         print(f"The werewolves attempted to kill {playerlist[deadplayer].name}, but they were protected")
 
@@ -353,7 +360,7 @@ def sheriffact(playerid):
     hit = False
     select = -1
 
-    print("You are the sheriff, and can choose a player to kill, but if you select an innocent you will die instead: You can freely kill any neutral or evil roles")
+    print("You can choose a player to kill, but if you select an innocent you will die instead: You can freely kill any neutral or evil roles")
     killconfirm = intinputvalidate("Would you like to try to kill someone tonight? (1=Yes, 0=No)\n", 0, 1)
     if killconfirm:
         select = playerselectnotself(playerid)
@@ -366,14 +373,14 @@ def sheriffact(playerid):
 
 
 def medicact(playerid):
-    print("You are the medic, and can choose a player this round (not yourself) to protect them from being killed this night (some killing roles may bypass your protection)")
+    print("You can choose a player this round (not yourself) to protect them from being killed this night (some killing roles may bypass your protection)")
     select = playerselectnotself(playerid)
     print(f"Player {playerlist[select].name} will be protected this round")
     playerlist[select].protected = True
 
 
 def survivoract(playerid):
-    print("You are the survivor. You are a neutral, and only win if you are alive when the game ends, whether the werewolves or villagers win")
+    print("You are a neutral, and only win if you are alive when the game ends, whether the werewolves or villagers win")
     sleep(1)
     if playerlist[playerid].survivorprotectavailable:
         print("You can protect yourself from death for one night this game")
@@ -388,7 +395,7 @@ def survivoract(playerid):
 
 def guardianangelact(playerid):
     protectingplayerid = playerlist[playerid].guardianangelprotectingid
-    print(f"You are the Guardian Angel, and you are protecting Player {playerlist[protectingplayerid].name}, who is a {rolenames[playerlist[protectingplayerid].roleid]}. You can only win if this player wins.")
+    print(f"You are protecting Player {playerlist[protectingplayerid].name}, who is a {rolenames[playerlist[protectingplayerid].roleid]}. You can only win if this player wins.")
     print("They know they have a guardian angel, but don't know who you are. If they die, you will become a Survivor")
     print()
     if playerlist[playerid].guardianangelprotectavailable:
@@ -400,6 +407,16 @@ def guardianangelact(playerid):
     else:
         print("You have already used your one time protection this game, and can no longer act during the night. Hope they don't die")
         disguiseact()
+
+
+def altruistact(playerid):
+    print("You can choose to redirect tonight's werewolf kill to kill you instead")
+    altruistconfirm = intinputvalidate("Would you like to sacrifice yourself tonight? (1=Yes, 0=No)\n", 0, 1)
+    if altruistconfirm:
+        print("You will be remembered.")
+        return playerid
+    else:
+        return None
 
 
 def vote(playerid):
@@ -440,6 +457,7 @@ while run:
 
     werewolfkillvotes = [] # Resets werewolf kill votes at the start of the game loop
     sheriffresult = [False, False, -1] # Resets sheriff result at the start of the game loop
+    altruistresult = None # Resets altruist result at the start of the game loop
 
     for i in range(playernum):
         if playerlist[i].roleid == 9:
@@ -469,7 +487,10 @@ while run:
         if playerlist[i].living:
             privateplayerchoiceprep(i)
 
-            print(f"Player {playername}, you are a {rolenames[roleslistnightcopy[i]]}")
+            if playerlist[i].roleid == 0 or playerlist[i].roleid in evilrolelist: # Can be multiple villagers/werewolves
+                print(f"Player {playername}, you are a {rolenames[roleslistnightcopy[i]]}")
+            else: # Only one of each other role
+                print(f"Player {playername}, you are the {rolenames[roleslistnightcopy[i]]}")
             sleep(1)
 
             if playerlist[i].guardian:
@@ -505,6 +526,8 @@ while run:
                     survivoract(i)
                 case 9: # Guardian Angel
                     guardianangelact(i)
+                case 10: # Altruist
+                    altruistresult = altruistact(i)
                 case _:
                     print("Role not found")
 
