@@ -50,14 +50,56 @@ class Player:
         if self.roleid == 4:
             hunterdeathact(self.playerid)
 
+# Colours
+reset = "\033[0m"
+dim = "\033[2m"
+red = "\033[31m"
+green = "\033[32m"
+yellow = "\033[33m"
+blue = "\033[34m"
+magenta = "\033[35m"
+cyan = "\033[36m"
+brightgreen = "\033[92m"
+brightyellow = "\033[93m"
+darkred = "\033[38;5;52m"
+yellowgreen = "\033[38;5;112m"
+orange = "\033[38;5;214m"
+
+
 # Roles: 0 - Villager, 1 - Werewolf, 2 - Naughty Girl, 3 - Drunk, 4 - Hunter, 5 - Jester, 6 - Sheriff, 7 - Medic, 8 - Survivor, 9 - Guardian Angel, 10 - Altruist, 11 - Guesser Wolf, 12 - Imitator
 # Town: Villager, Naughty Girl, Drunk, Hunter, Sheriff, Medic
 # Neutral: Jester, Survivor, Guardian Angel
 # Evil: Werewolf
-rolenames = ["Villager", "Werewolf", "Naughty Girl", "Drunk", "Hunter", "Jester", "Sheriff", "Medic", "Survivor", "Guardian Angel", "Altruist", "Guesser Wolf", "Imitator"]
+rolenames = [f"{dim}Villager{reset}",
+             f"{red}Werewolf{reset}",
+             f"{blue}Naughty Girl{reset}",
+             f"{orange}Drunk{reset}",
+             f"{brightgreen}Hunter{reset}",
+             f"{magenta}Jester{reset}",
+             f"{yellow}Sheriff{reset}",
+             f"{green}Medic{reset}",
+             f"{brightyellow}Survivor{reset}",
+             f"{cyan}Guardian Angel{reset}",
+             f"{darkred}Altruist{reset}",
+             f"{red}Guesser Wolf{reset}",
+             f"{yellowgreen}Imitator{reset}"]
 townrolelist = [0, 2, 3, 4, 6, 7, 10, 12]
 neutralrolelist = [5, 8, 9]
 evilrolelist = [1, 11]
+
+villager = rolenames[0]
+werewolf = rolenames[1]
+naughtygirl = rolenames[2]
+drunk = rolenames[3]
+hunter = rolenames[4]
+jester = rolenames[5]
+sheriff = rolenames[6]
+medic = rolenames[7]
+survivor = rolenames[8]
+guardianangel = rolenames[9]
+altruist = rolenames[10]
+guesserwolf = rolenames[11]
+imitator = rolenames[12]
 
 playerlist = []
 playernamelist = []
@@ -592,7 +634,7 @@ while run:
             sleep(1)
 
             if playerlist[i].guardian:
-                print("You have a Guardian Angel who is trying to help you win. They know you and your role but you don't know who they are")
+                print(f"You have a {guardianangel} who is trying to help you win. They know you and your role but you don't know who they are")
                 sleep(1)
 
             match roleslistnightcopy[i]:
@@ -601,7 +643,7 @@ while run:
                 case 1: # Werewolf
                     # Displays all werewolf allies
                     if len(werewolfallylist) > 1:
-                        print("The werewolves are:")
+                        print(f"The {red}werewolves{reset} are:")
                         for ally in werewolfallylist:
                             print(ally)
 
@@ -611,7 +653,7 @@ while run:
                 case 3: # Drunk
                     drunkact(i)
                 case 4: # Hunter
-                    print("When you die, you will be able to kill a player of your choice. Try to kill a werewolf")
+                    print(f"When you die, you will be able to kill a player of your choice. Try to kill a {werewolf}")
                     sleep(1)
                     disguiseact()
                 case 5: # Jester
@@ -630,14 +672,14 @@ while run:
                     altruistresult = altruistact(i)
                 case 11: # Guesser Wolf
                     if playerlist[i].doubleshotavailable:
-                        print("You are a werewolf ally who gets a second life when guessing roles")
+                        print(f"You are a {werewolf} ally who gets a second life when guessing roles")
                     else:
                         print("You have used up your guessing second life. Be cautious when guessing again")
                     sleep(1)
 
                     # Displays all werewolf allies
                     if len(werewolfallylist) > 1:
-                        print("The werewolves are:")
+                        print(f"The {red}werewolves{reset} are:")
                         for ally in werewolfallylist:
                             print(ally)
                         sleep(1)
@@ -775,22 +817,37 @@ while run:
 
 # Main winners
 
+winneridlist = []
 if not jesterwin:
     if checkwinresult[1] == 1:
         print("The villagers have won!")
     elif checkwinresult[1] == 2:
-        print("The werewolves have won!")
+        print(f"The {red}werewolves{reset} have won!")
 else:
-    print("The jester has won!")
+    print(f"The {jester} has won!")
+    for i in range(playernum):
+        if playerlist[i].roleid == 5:
+            winneridlist.append(i)
+
+for i in range(playernum):
+    if playerlist[i].roleid in townrolelist and checkwinresult[1] == 1:
+        winneridlist.append(i) # Town winners
+    if playerlist[i].roleid in evilrolelist and checkwinresult[1] == 2:
+        winneridlist.append(i) # Werewolf winners
 
 sleep(1)
 
 # Other winners
-
-# Survivor win
 for i in range(playernum):
+    # Survivor win
     if roleslist[i] == 8:
         if playerlist[i].living:
-            print(f"Player {playerlist[i].name} also won, as they were the survivor and lived to the end of the game!")
+            print(f"Player {playerlist[i].name} also won, as they were the {survivor} and lived to the end of the game!")
+            winneridlist.append(i)
+    # Guardian Angel win
+    elif roleslist[i] == 9:
+        if playerlist[i].guardianangelprotectingid in winneridlist:
+            print(f"Player {playerlist[i].name} also won, as they were the {guardianangel} protecting {playerlist[playerlist[i].guardianangelprotectingid].name} who won!")
+            winneridlist.append(i)
 
 sleep(10)
