@@ -110,6 +110,8 @@ townrolelist = [0, 2, 3, 4, 6, 7, 10, 12, 14]
 neutralrolelist = [5, 8, 9]
 evilrolelist = [1, 11, 13]
 
+imitatorallowedrolelist = [0, 2, 3, 6, 7, 10]
+
 villager = rolenames[0]
 werewolf = rolenames[1]
 naughtygirl = rolenames[2]
@@ -590,7 +592,7 @@ def altruistact(playerid):
 def imitatoract():
     imitatorselectid = 0 # Backup value in case of error
 
-    print("You can select a dead player with a town role and use their role next night")
+    print("You can select a dead player with an allowed town role and use their role next night")
     sleep(1)
 
     while True:
@@ -601,7 +603,7 @@ def imitatoract():
         else:
             for i in range(playernum):
                 if playerlist[i].name == imitatorselect:
-                    if playerlist[i].roleid in townrolelist and not playerlist[i].living:
+                    if playerlist[i].roleid in imitatorallowedrolelist and not playerlist[i].living:
                         imitatorselectid = i
                         flag = True
             if flag:
