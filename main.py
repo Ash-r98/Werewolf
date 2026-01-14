@@ -716,15 +716,15 @@ while run:
     if sheriffresult[0]: # If the sheriff attempted to kill someone
         if sheriffresult[1]: # If the sheriff correctly killed non-town
             if playerlist[sheriffresult[2]].protected:
-                print(f"The sheriff attempted to kill player {playerlist[sheriffresult[2]].name}, but they were protected")
+                print(f"The {sheriff} attempted to kill player {playerlist[sheriffresult[2]].name}, but they were protected")
             else:
-                print(f"The sheriff correctly killed player {playerlist[sheriffresult[2]].name}")
+                print(f"The {sheriff} correctly killed player {playerlist[sheriffresult[2]].name}")
                 playerlist[sheriffresult[2]].die()
         else: # The sheriff incorrectly shot and killed themselves
             if playerlist[sheriffresult[2]].protected:
-                print(f"The sheriff {playerlist[sheriffresult[2]].name} incorrectly shot an innocent but were luckily protected")
+                print(f"The {sheriff} {playerlist[sheriffresult[2]].name} incorrectly shot an innocent but were luckily protected")
             else:
-                print(f"The sheriff {playerlist[sheriffresult[2]].name} incorrectly shot an innocent and instead killed themself")
+                print(f"The {sheriff} {playerlist[sheriffresult[2]].name} incorrectly shot an innocent and instead killed themself")
                 playerlist[sheriffresult[2]].die()
         sleep(1)
 
@@ -803,7 +803,7 @@ while run:
         if len(sniperesultlist) > 0:
             if sniperesultlist[i][0]:
                 if sniperesultlist[i][1]:
-                    print(f"A werewolf correctly guessed the role of player {playerlist[sniperesultlist[i][2]].name}")
+                    print(f"A {werewolf} correctly guessed the role of player {playerlist[sniperesultlist[i][2]].name}")
                     playerlist[sniperesultlist[i][2]].die()
                 else:
                     if playerlist[sniperesultlist[i][2]].roleid == 11 and playerlist[sniperesultlist[i][2]].doubleshotavailable: # If role is Guesser Wolf and they have their double shot available
