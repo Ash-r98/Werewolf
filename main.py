@@ -65,10 +65,11 @@ brightmagenta = "\033[95m"
 darkred = "\033[38;5;52m"
 yellowgreen = "\033[38;5;112m"
 orange = "\033[38;5;214m"
+darkorange = "\033[38;5;142m"
 
 
-# Roles: 0 - Villager, 1 - Werewolf, 2 - Naughty Girl, 3 - Drunk, 4 - Hunter, 5 - Jester, 6 - Sheriff, 7 - Medic, 8 - Survivor, 9 - Guardian Angel, 10 - Altruist, 11 - Guesser Wolf, 12 - Imitator, 13 - Berserker Wolf
-# Town: Villager, Naughty Girl, Drunk, Hunter, Sheriff, Medic, Altruist, Imitator
+# Roles: 0 - Villager, 1 - Werewolf, 2 - Naughty Girl, 3 - Drunk, 4 - Hunter, 5 - Jester, 6 - Sheriff, 7 - Medic, 8 - Survivor, 9 - Guardian Angel, 10 - Altruist, 11 - Guesser Wolf, 12 - Imitator, 13 - Berserker Wolf, 14 - Vigilante
+# Town: Villager, Naughty Girl, Drunk, Hunter, Sheriff, Medic, Altruist, Imitator, Vigilante
 # Neutral: Jester, Survivor, Guardian Angel
 # Evil: Werewolf, Guesser Wolf, Berserker Wolf
 rolenames = [f"{dim}Villager{reset}", # 0
@@ -84,9 +85,28 @@ rolenames = [f"{dim}Villager{reset}", # 0
              f"{darkred}Altruist{reset}", # 10
              f"{red}Guesser Wolf{reset}", # 11
              f"{yellowgreen}Imitator{reset}", # 12
-             f"{red}Berserker Wolf{reset}" # 13
+             f"{red}Berserker Wolf{reset}", # 13
+             f"{darkorange}Vigilante{reset}" # 14
              ]
-townrolelist = [0, 2, 3, 4, 6, 7, 10, 12]
+
+rolenamesnocolour = ["Villager", # 0
+                     "Werewolf", # 1
+                     "Naughty Girl", # 2
+                     "Drunk", # 3
+                     "Hunter", # 4
+                     "Jester", # 5
+                     "Sheriff", # 6
+                     "Medic", # 7
+                     "Survivor", # 8
+                     "Guardian Angel", # 9
+                     "Altruist", # 10
+                     "Guesser Wolf", # 11
+                     "Imitator", # 12
+                     "Berserker Wolf", # 13
+                     "Vigilante" # 14
+                     ]
+
+townrolelist = [0, 2, 3, 4, 6, 7, 10, 12, 14]
 neutralrolelist = [5, 8, 9]
 evilrolelist = [1, 11, 13]
 
@@ -104,6 +124,7 @@ altruist = rolenames[10]
 guesserwolf = rolenames[11]
 imitator = rolenames[12]
 berserkerwolf = rolenames[13]
+vigilante = rolenames[14]
 
 playerlist = []
 playernamelist = []
@@ -134,6 +155,28 @@ def displayroles():
     for role in rolenames:
         print(role)
     print()  # Leaves whitespace after roles are displayed
+
+
+def displaytownroles():
+    print(f"All {len(townrolelist)} town roles:")
+    for role in townrolelist:
+        print(rolenames[role])
+    print()  # Leaves whitespace after roles are displayed
+
+
+def displayneutralroles():
+    print(f"All {len(neutralrolelist)} neutral roles:")
+    for role in neutralrolelist:
+        print(rolenames[role])
+    print()  # Leaves whitespace after roles are displayed
+
+
+def displayevilroles():
+    print(f"All {len(evilrolelist)} evil roles:")
+    for role in evilrolelist:
+        print(rolenames[role])
+    print()  # Leaves whitespace after roles are displayed
+
 
 while True:
     newplayername = input("Input player name: (Input '0' once all players are in or '-1' to reset all names)\n")
@@ -301,17 +344,24 @@ def playerselectforvote():
     return selectid
 
 
-def roleselect():
+def roleselect(werewolfbool):
+    # If werewolfbool is true, werewolf snipe
+    # If werewolfbool is false, imitator snipe
+
     selectid = 0 # Placeholder in case of error
 
     while True:
         flag = False
         selectrole = input("Input the role you would like to select: (leave empty to display all roles)\n")
         if selectrole == '':
-            displayroles()
+            if werewolfbool:
+                displaytownroles()
+            else:
+                displayevilroles()
+            displayneutralroles()
         else:
-            for i in range(len(rolenames)):
-                if rolenames[i] == selectrole:
+            for i in range(len(rolenamesnocolour)):
+                if rolenamesnocolour[i] == selectrole:
                     selectid = i
                     flag = True
             if flag:
@@ -417,17 +467,17 @@ def werewolfkill():
                 print(f"Player {deadplayer.name} was protected, but the {berserkerwolf} broke through the protection!")
                 werewolfkillconfirmed(deadplayer.playerid)
             else:
-                print(f"The werewolves attempted to kill {deadplayer.name}, but they were protected")
+                print(f"The {red}werewolves{reset} attempted to kill {deadplayer.name}, but they were protected")
     else:
-        print(f"The werewolves attempted to kill {deadplayer.name}, but the altruist chose to sacrifice themself")
+        print(f"The {red}werewolves{reset} attempted to kill {deadplayer.name}, but the {altruist} chose to sacrifice themself")
         if not playerlist[altruistresult].protected:
             werewolfkillconfirmed(altruistresult)
         else:
-            print(f"The altruist was protected and survived")
+            print(f"The {altruist} was protected and survived")
 
 
 def naughtygirlact(playerid):
-    print("You will select two other players (not yourself) and swap their roles")
+    print("You must select two other players (not yourself) and swap their roles")
     sleep(1)
 
     select1 = playerselectnotself(playerid)
@@ -442,7 +492,7 @@ def naughtygirlact(playerid):
 
 
 def drunkact(playerid):
-    print("You will select another player and swap your own role with theirs")
+    print("You must select another player and swap your own role with theirs")
     sleep(1)
 
     select = playerselectnotself(playerid)
@@ -451,7 +501,7 @@ def drunkact(playerid):
 
 
 def hunterdeathact(playerid):
-    print("The Hunter has died, and can now select a player to kill")
+    print(f"The {hunter} has died, and can now select a player to kill")
     sleep(1)
 
     select = playerselectnotself(playerid)
@@ -509,7 +559,7 @@ def guardianangelact(playerid):
     protectingplayerid = playerlist[playerid].guardianangelprotectingid
     print(f"You are protecting Player {playerlist[protectingplayerid].name}, who is a {rolenames[playerlist[protectingplayerid].roleid]}. You can only win if this player wins.")
     sleep(1)
-    print("They know they have a guardian angel, but don't know who you are. If they die, you will become a Survivor")
+    print(f"They know they have a {guardianangel}, but don't know who you are. If they die, you will become a {survivor}")
     sleep(1)
     print()
     if playerlist[playerid].guardianangelprotectavailable:
@@ -526,7 +576,7 @@ def guardianangelact(playerid):
 
 
 def altruistact(playerid):
-    print("You can choose to redirect tonight's werewolf kill to kill you instead")
+    print(f"You can choose to redirect tonight's {werewolf} kill to kill you instead")
     sleep(1)
 
     altruistconfirm = intinputvalidate("Would you like to sacrifice yourself tonight? (1=Yes, 0=No)\n", 0, 1)
@@ -559,17 +609,17 @@ def imitatoract():
             else:
                 print("Invalid selection")
 
-    print(f"Next night you will act as a {playerlist[imitatorselectid].roleid}")
+    print(f"Next night you will act as a {rolenames[playerlist[imitatorselectid].roleid]}")
     return imitatorselectid
 
 
 def vote(playerid):
     if playerlist[playerid].roleid not in evilrolelist and playerlist[playerid].roleid != 5:
-        print("You can select a player to vote who you think is a werewolf, or you can skip vote. Remember, if a jester is voted out then they will win")
+        print(f"You can select a player to vote who you think is a {werewolf}, or you can skip vote. Remember, if a {jester} is voted out then they will win")
     elif playerlist[playerid].roleid in evilrolelist:
-        print("You can vote someone out of the game, votes are private so don't vote for another werewolf, or you can skip vote. Remember, if a jester is voted out then they will win")
+        print(f"You can vote someone out of the game, votes are private so don't vote for another {werewolf}, or you can skip vote. Remember, if a {jester} is voted out then they will win")
     else:
-        print("You are the jester, so if you get voted out you will win. Voting yourself is likely the best option here, however you are allowed to vote for anyone or skip vote")
+        print(f"You are the {jester}, so if you get voted out you will win. Voting yourself is likely the best option here, however you are allowed to vote for anyone or skip vote")
     sleep(1)
 
     votedplayer = playerselectforvote()
@@ -579,20 +629,37 @@ def vote(playerid):
 def snipe(playerid):
     # Return: Snipe attempt true/false, snipe succeed true/false, id of sniped player on hit/sniper on miss
 
-    print("You are a werewolf, so if you believe you know another player's role, you can guess it to kill them instantly. However, if you are incorrect then you will die instead")
+    print(f"You are a {werewolf}, so if you believe you know another player's role, you can guess it to kill them instantly. However, if you are incorrect then you will die instead")
     sleep(1)
 
     if playerlist[playerid].roleid == 11:
         if playerlist[playerid].doubleshotavailable:
-            print("Because you are the Guesser Wolf, you are protected for one incorrect guess this game")
+            print(f"Because you are the {guesserwolf}, you are protected for one incorrect guess this game")
         else:
-            print("You are the Guesser Wolf, but you have already used your one incorrect guess this game")
+            print(f"You are the {guesserwolf}, but you have already used your one incorrect guess this game")
         sleep(1)
 
     snipeconfirm = intinputvalidate("Would you like to guess another player's role? (1=Yes, 0=No)\n", 0, 1)
     if snipeconfirm:
         snipedplayerid = playerselectnotself(playerid)
-        snipedplayerrole = roleselect()
+        snipedplayerrole = roleselect(True)
+        if playerlist[snipedplayerid].roleid == snipedplayerrole:
+            return True, True, snipedplayerid
+        else:
+            return True, False, playerid
+    else:
+        return False, False, -1
+
+
+def vigilanteact(playerid):
+    # Return: Snipe attempt true/false, snipe succeed true/false, id of sniped player on hit/sniper on miss
+
+    print(f"You are a {vigilante}, so if you believe you know another player is a {werewolf} and exactly which type they are you can kill them. However, if you guess wrong you will die")
+
+    snipeconfirm = intinputvalidate("Would you like to guess another player's role? (1=Yes, 0=No)\n", 0, 1)
+    if snipeconfirm:
+        snipedplayerid = playerselectnotself(playerid)
+        snipedplayerrole = roleselect(False)
         if playerlist[snipedplayerid].roleid == snipedplayerrole:
             return True, True, snipedplayerid
         else:
@@ -706,6 +773,10 @@ while run:
 
                     displaywerewolfallies()
                     werewolfact(i)
+                case 14: # Vigilante
+                    print(f"You will be able to guess the roles of {red}werewolves{reset} during the voting phase. Be careful, if you guess wrong you will die")
+                    sleep(1)
+                    disguiseact()
                 case _:
                     print("Role not found")
 
@@ -754,6 +825,7 @@ while run:
 
         votelist = []
         sniperesultlist = []
+        vigilanteresult = [False, False, -1]  # Resets vigilante result before it's used
         for i in range(playernum):
             clearscreen()
             print(f"Day {night}\n")  # Night counter = Day counter
@@ -762,13 +834,18 @@ while run:
             if playerlist[i].living:
                 privateplayerchoiceprep(i)
 
-                if playerlist[i].roleid in evilrolelist: # Werewolves can guess roles during voting phase
+                if playerlist[i].roleid in evilrolelist: # Werewolves role sniping
                     sniperesultlist.append(snipe(i))
                     print()
                     sleep(1)
 
                 if playerlist[i].roleid == 12: # Imitator role selection
                     imitatorselectedroleid = playerlist[imitatoract()].roleid
+
+                if playerlist[i].roleid == 14: # Vigilante evil role sniping
+                    vigilanteresult = vigilanteact(i)
+                    print()
+                    sleep(1)
 
                 playervote = vote(i)
 
@@ -816,6 +893,7 @@ while run:
                 print(playerlist[playerid].name)
             print("Because there was a tie in votes, no one will be removed from the game")
 
+        # Werewolf snipe results
         if len(sniperesultlist) > 0:
             if sniperesultlist[i][0]:
                 if sniperesultlist[i][1]:
@@ -827,6 +905,15 @@ while run:
                     else:
                         print(f"Player {playerlist[sniperesultlist[i][2]].name} attempted to guess another player's role but was incorrect")
                         playerlist[sniperesultlist[i][2]].die()
+
+        # Vigilante snipe results
+        if vigilanteresult[0]:
+            if vigilanteresult[1]:
+                print(f"The {vigilante} correctly guessed the role of player {playerlist[vigilanteresult[2]].name}")
+            else:
+                print(f"Player {playerlist[vigilanteresult[2]].name} attempted to guess a werewolf's role but was incorrect")
+            playerlist[vigilanteresult[2]].die()
+
 
         checkwinresult = checkwin()
         if checkwinresult[0]:
