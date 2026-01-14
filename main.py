@@ -61,6 +61,7 @@ magenta = "\033[35m"
 cyan = "\033[36m"
 brightgreen = "\033[92m"
 brightyellow = "\033[93m"
+brightmagenta = "\033[95m"
 darkred = "\033[38;5;52m"
 yellowgreen = "\033[38;5;112m"
 orange = "\033[38;5;214m"
@@ -75,7 +76,7 @@ rolenames = [f"{dim}Villager{reset}",
              f"{blue}Naughty Girl{reset}",
              f"{orange}Drunk{reset}",
              f"{brightgreen}Hunter{reset}",
-             f"{magenta}Jester{reset}",
+             f"{brightmagenta}Jester{reset}",
              f"{yellow}Sheriff{reset}",
              f"{green}Medic{reset}",
              f"{brightyellow}Survivor{reset}",
@@ -718,9 +719,13 @@ while run:
                 print(f"The sheriff attempted to kill player {playerlist[sheriffresult[2]].name}, but they were protected")
             else:
                 print(f"The sheriff correctly killed player {playerlist[sheriffresult[2]].name}")
+                playerlist[sheriffresult[2]].die()
         else: # The sheriff incorrectly shot and killed themselves
-            print(f"The sheriff {playerlist[sheriffresult[2]].name} attempted to shoot an innocent and instead killed themself")
-        playerlist[sheriffresult[2]].die()
+            if playerlist[sheriffresult[2]].protected:
+                print(f"The sheriff {playerlist[sheriffresult[2]].name} incorrectly shot an innocent but were luckily protected")
+            else:
+                print(f"The sheriff {playerlist[sheriffresult[2]].name} incorrectly shot an innocent and instead killed themself")
+                playerlist[sheriffresult[2]].die()
         sleep(1)
 
     checkwinresult = checkwin()
