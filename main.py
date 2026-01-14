@@ -68,22 +68,23 @@ orange = "\033[38;5;214m"
 
 
 # Roles: 0 - Villager, 1 - Werewolf, 2 - Naughty Girl, 3 - Drunk, 4 - Hunter, 5 - Jester, 6 - Sheriff, 7 - Medic, 8 - Survivor, 9 - Guardian Angel, 10 - Altruist, 11 - Guesser Wolf, 12 - Imitator
-# Town: Villager, Naughty Girl, Drunk, Hunter, Sheriff, Medic
+# Town: Villager, Naughty Girl, Drunk, Hunter, Sheriff, Medic, Altruist, Imitator
 # Neutral: Jester, Survivor, Guardian Angel
-# Evil: Werewolf
-rolenames = [f"{dim}Villager{reset}",
-             f"{red}Werewolf{reset}",
-             f"{blue}Naughty Girl{reset}",
-             f"{orange}Drunk{reset}",
-             f"{brightgreen}Hunter{reset}",
-             f"{brightmagenta}Jester{reset}",
-             f"{yellow}Sheriff{reset}",
-             f"{green}Medic{reset}",
-             f"{brightyellow}Survivor{reset}",
-             f"{cyan}Guardian Angel{reset}",
-             f"{darkred}Altruist{reset}",
-             f"{red}Guesser Wolf{reset}",
-             f"{yellowgreen}Imitator{reset}"]
+# Evil: Werewolf, Guesser Wolf
+rolenames = [f"{dim}Villager{reset}", # 0
+             f"{red}Werewolf{reset}", # 1
+             f"{blue}Naughty Girl{reset}", # 2
+             f"{orange}Drunk{reset}", # 3
+             f"{brightgreen}Hunter{reset}", # 4
+             f"{brightmagenta}Jester{reset}", # 5
+             f"{yellow}Sheriff{reset}", # 6
+             f"{green}Medic{reset}", # 7
+             f"{brightyellow}Survivor{reset}", # 8
+             f"{cyan}Guardian Angel{reset}", # 9
+             f"{darkred}Altruist{reset}", # 10
+             f"{red}Guesser Wolf{reset}", # 11
+             f"{yellowgreen}Imitator{reset}" # 12
+             ]
 townrolelist = [0, 2, 3, 4, 6, 7, 10, 12]
 neutralrolelist = [5, 8, 9]
 evilrolelist = [1, 11]
