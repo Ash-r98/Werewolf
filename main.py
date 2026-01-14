@@ -67,10 +67,10 @@ yellowgreen = "\033[38;5;112m"
 orange = "\033[38;5;214m"
 
 
-# Roles: 0 - Villager, 1 - Werewolf, 2 - Naughty Girl, 3 - Drunk, 4 - Hunter, 5 - Jester, 6 - Sheriff, 7 - Medic, 8 - Survivor, 9 - Guardian Angel, 10 - Altruist, 11 - Guesser Wolf, 12 - Imitator
+# Roles: 0 - Villager, 1 - Werewolf, 2 - Naughty Girl, 3 - Drunk, 4 - Hunter, 5 - Jester, 6 - Sheriff, 7 - Medic, 8 - Survivor, 9 - Guardian Angel, 10 - Altruist, 11 - Guesser Wolf, 12 - Imitator, 13 - Berserker Wolf
 # Town: Villager, Naughty Girl, Drunk, Hunter, Sheriff, Medic, Altruist, Imitator
 # Neutral: Jester, Survivor, Guardian Angel
-# Evil: Werewolf, Guesser Wolf
+# Evil: Werewolf, Guesser Wolf, Berserker Wolf
 rolenames = [f"{dim}Villager{reset}", # 0
              f"{red}Werewolf{reset}", # 1
              f"{blue}Naughty Girl{reset}", # 2
@@ -83,11 +83,12 @@ rolenames = [f"{dim}Villager{reset}", # 0
              f"{cyan}Guardian Angel{reset}", # 9
              f"{darkred}Altruist{reset}", # 10
              f"{red}Guesser Wolf{reset}", # 11
-             f"{yellowgreen}Imitator{reset}" # 12
+             f"{yellowgreen}Imitator{reset}", # 12
+             f"{red}Berserker Wolf{reset}" # 13
              ]
 townrolelist = [0, 2, 3, 4, 6, 7, 10, 12]
 neutralrolelist = [5, 8, 9]
-evilrolelist = [1, 11]
+evilrolelist = [1, 11, 13]
 
 villager = rolenames[0]
 werewolf = rolenames[1]
@@ -102,6 +103,7 @@ guardianangel = rolenames[9]
 altruist = rolenames[10]
 guesserwolf = rolenames[11]
 imitator = rolenames[12]
+berserkerwolf = rolenames[13]
 
 playerlist = []
 playernamelist = []
@@ -363,6 +365,13 @@ def privateplayerchoiceprep(playerid):
         sleep(1)
 
 
+def displaywerewolfallies():
+    if len(werewolfallylist) > 1:
+        print(f"The {red}werewolves{reset} are:")
+        for ally in werewolfallylist:
+            print(ally)
+
+
 # Character Actions
 
 def disguiseact():
@@ -395,15 +404,26 @@ def werewolfkillconfirmed(deadplayer):
     playerlist[deadplayer].die()
 
 def werewolfkill():
-    deadplayer = werewolfkillvotes[randint(0, len(werewolfkillvotes)-1)][0]
-    if not playerlist[deadplayer].protected:
-        if altruistresult == None:
-            werewolfkillconfirmed(deadplayer)
+    werewolfkillselection = werewolfkillvotes[randint(0, len(werewolfkillvotes)-1)]
+    deadplayer = playerlist[werewolfkillselection[0]]
+    berserkerkill = False
+    if playerlist[werewolfkillselection[1]].roleid == 13:
+        berserkerkill = True
+    if altruistresult == None:
+        if not deadplayer.protected:
+            werewolfkillconfirmed(deadplayer.playerid)
         else:
-            print(f"The werewolves attempted to kill {playerlist[deadplayer].name}, but the altruist sacrificed themself")
-            werewolfkillconfirmed(altruistresult)
+            if berserkerkill:
+                print(f"Player {deadplayer.name} was protected, but the {berserkerwolf} broke through the protection!")
+                werewolfkillconfirmed(deadplayer.playerid)
+            else:
+                print(f"The werewolves attempted to kill {deadplayer.name}, but they were protected")
     else:
-        print(f"The werewolves attempted to kill {playerlist[deadplayer].name}, but they were protected")
+        print(f"The werewolves attempted to kill {deadplayer.name}, but the altruist chose to sacrifice themself")
+        if not playerlist[altruistresult].protected:
+            werewolfkillconfirmed(altruistresult)
+        else:
+            print(f"The altruist was protected and survived")
 
 
 def naughtygirlact(playerid):
@@ -643,12 +663,7 @@ while run:
                 case 0: # Villager
                     disguiseact()
                 case 1: # Werewolf
-                    # Displays all werewolf allies
-                    if len(werewolfallylist) > 1:
-                        print(f"The {red}werewolves{reset} are:")
-                        for ally in werewolfallylist:
-                            print(ally)
-
+                    displaywerewolfallies()
                     werewolfact(i)
                 case 2: # Naughty Girl
                     naughtygirlact(i)
@@ -674,23 +689,23 @@ while run:
                     altruistresult = altruistact(i)
                 case 11: # Guesser Wolf
                     if playerlist[i].doubleshotavailable:
-                        print(f"You are a {werewolf} ally who gets a second life when guessing roles")
+                        print(f"You are a {werewolf} who gets a second life when guessing roles")
                     else:
                         print("You have used up your guessing second life. Be cautious when guessing again")
                     sleep(1)
 
-                    # Displays all werewolf allies
-                    if len(werewolfallylist) > 1:
-                        print(f"The {red}werewolves{reset} are:")
-                        for ally in werewolfallylist:
-                            print(ally)
-                        sleep(1)
-
+                    displaywerewolfallies()
                     werewolfact(i)
                 case 12: # Imitator
                     print("You will be able to take the role of a dead town player during the voting phase to use it the next night")
                     sleep(1)
                     disguiseact()
+                case 13: # Berserker Wolf
+                    print(f"You are a {werewolf} who can bypass player death protection")
+                    sleep(1)
+
+                    displaywerewolfallies()
+                    werewolfact(i)
                 case _:
                     print("Role not found")
 
