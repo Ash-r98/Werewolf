@@ -110,7 +110,10 @@ rolenamesnocolour = ["Villager", # 0
                      ]
 
 townrolelist = [0, 2, 3, 4, 6, 7, 10, 12, 14]
-neutralrolelist = [5, 8, 9, 15]
+neutralgoodrolelist = [8]
+trueneutralrolelist = [5, 9]
+neutralkillrolelist = [15]
+neutralrolelist = neutralgoodrolelist + trueneutralrolelist + neutralkillrolelist
 evilrolelist = [1, 11, 13]
 
 imitatorallowedrolelist = [0, 2, 3, 6, 7, 10]
@@ -375,11 +378,14 @@ def roleselect(werewolfbool):
             for i in range(len(rolenamesnocolour)):
                 if rolenamesnocolour[i] == selectrole:
                     selectid = i
-                    flag = True
+            if werewolfbool and (selectid in townrolelist or selectid in neutralrolelist):
+                flag = True
+            elif not werewolfbool and (selectid in neutralrolelist or selectid in evilrolelist):
+                flag = True
             if flag:
                 break
             else:
-                print("Role not found")
+                print("Invalid role")
     return selectid
 
 
