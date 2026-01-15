@@ -43,10 +43,10 @@ class Player:
 
     def die(self):
         self.living = False
-        if self.roleid == 0 or self.roleid in evilrolelist: # Can be multiple villagers/werewolves
+        if roledisplayondeath:
             print(f"Player {self.name} has died. They were a {rolenames[self.roleid]}")
-        else: # Only one of each other role
-            print(f"Player {self.name} has died. They were the {rolenames[self.roleid]}")
+        else:
+            print(f"Player {self.name} has died.")
         if self.roleid == 4:
             hunterdeathact(self.playerid)
 
@@ -59,6 +59,7 @@ yellow = "\033[33m"
 blue = "\033[34m"
 magenta = "\033[35m"
 cyan = "\033[36m"
+brightred = "\033[91m"
 brightgreen = "\033[92m"
 brightyellow = "\033[93m"
 brightmagenta = "\033[95m"
@@ -68,9 +69,9 @@ orange = "\033[38;5;214m"
 darkorange = "\033[38;5;142m"
 
 
-# Roles: 0 - Villager, 1 - Werewolf, 2 - Naughty Girl, 3 - Drunk, 4 - Hunter, 5 - Jester, 6 - Sheriff, 7 - Medic, 8 - Survivor, 9 - Guardian Angel, 10 - Altruist, 11 - Guesser Wolf, 12 - Imitator, 13 - Berserker Wolf, 14 - Vigilante
+# Roles: 0 - Villager, 1 - Werewolf, 2 - Naughty Girl, 3 - Drunk, 4 - Hunter, 5 - Jester, 6 - Sheriff, 7 - Medic, 8 - Survivor, 9 - Guardian Angel, 10 - Altruist, 11 - Guesser Wolf, 12 - Imitator, 13 - Berserker Wolf, 14 - Vigilante, 15 - Lone Wolf
 # Town: Villager, Naughty Girl, Drunk, Hunter, Sheriff, Medic, Altruist, Imitator, Vigilante
-# Neutral: Jester, Survivor, Guardian Angel
+# Neutral: Jester, Survivor, Guardian Angel, Lone Wolf
 # Evil: Werewolf, Guesser Wolf, Berserker Wolf
 rolenames = [f"{dim}Villager{reset}", # 0
              f"{red}Werewolf{reset}", # 1
@@ -86,7 +87,8 @@ rolenames = [f"{dim}Villager{reset}", # 0
              f"{red}Guesser Wolf{reset}", # 11
              f"{yellowgreen}Imitator{reset}", # 12
              f"{red}Berserker Wolf{reset}", # 13
-             f"{darkorange}Vigilante{reset}" # 14
+             f"{darkorange}Vigilante{reset}", # 14
+             f"{brightred}Lone Wolf{reset}" # 15
              ]
 
 rolenamesnocolour = ["Villager", # 0
@@ -103,11 +105,12 @@ rolenamesnocolour = ["Villager", # 0
                      "Guesser Wolf", # 11
                      "Imitator", # 12
                      "Berserker Wolf", # 13
-                     "Vigilante" # 14
+                     "Vigilante", # 14
+                     "Lone Wolf" # 15
                      ]
 
 townrolelist = [0, 2, 3, 4, 6, 7, 10, 12, 14]
-neutralrolelist = [5, 8, 9]
+neutralrolelist = [5, 8, 9, 15]
 evilrolelist = [1, 11, 13]
 
 imitatorallowedrolelist = [0, 2, 3, 6, 7, 10]
@@ -127,11 +130,13 @@ guesserwolf = rolenames[11]
 imitator = rolenames[12]
 berserkerwolf = rolenames[13]
 vigilante = rolenames[14]
+lonewolf = rolenames[15]
 
 playerlist = []
 playernamelist = []
 roleslist = []
 devmode = False
+roledisplayondeath = True
 
 def displaynames():
     print(f"All {len(playernamelist)} players:")
@@ -207,6 +212,11 @@ while True:
                 roleslist.append(0)
         else:
             print("Name is already taken")
+
+if intinputvalidate("Would you like players to display their role on death? (1=Yes, 0=No)", 0, 1) == 1:
+    roledisplayondeath = True
+else:
+    roledisplayondeath = False
 
 
 # Roles setup
@@ -376,20 +386,24 @@ def roleselect(werewolfbool):
 def checkwin():
     aliveplayersnum = 0
     alivewerewolvesnum = 0
+    lonewolfalive = False
 
     for i in range(playernum):
         if playerlist[i].living:
             aliveplayersnum += 1
-
-    for i in range(playernum):
+            if playerlist[i].roleid == 15:
+                lonewolfalive = True
         if playerlist[i].roleid in evilrolelist:
             if playerlist[i].living:
                 alivewerewolvesnum += 1
 
     anywin = False # If true, either villagers or werewolves have won
-    winid = 0 # 0 = No win, 1 = Villagers, 2 = Werewolves
+    winid = 0 # 0 = No win, 1 = Villagers, 2 = Werewolves, 3 = Lone Wolf
 
-    if alivewerewolvesnum <= 0:
+    if lonewolfalive and aliveplayersnum <= 2:
+        anywin = True
+        winid = 3
+    elif alivewerewolvesnum <= 0:
         anywin = True
         winid = 1
     elif aliveplayersnum / 2 <= alivewerewolvesnum:
@@ -456,6 +470,9 @@ def werewolfkillconfirmed(deadplayer):
     playerlist[deadplayer].die()
 
 def werewolfkill():
+    if len(werewolfkillvotes) <= 0:
+        print("No werewolf kill")
+        return -1
     werewolfkillselection = werewolfkillvotes[randint(0, len(werewolfkillvotes)-1)]
     deadplayer = playerlist[werewolfkillselection[0]]
     berserkerkill = False
@@ -615,6 +632,16 @@ def imitatoract():
     return imitatorselectid
 
 
+def lonewolfact(playerid):
+    print("You are on your own team. Don't let the town win. Don't let the werewolves win.")
+    sleep(1)
+    print("They won't know you're in the game until you kill someone")
+    sleep(1)
+    lonewolfkillconfirm = intinputvalidate("Would you like to kill someone tonight? (1=Yes, 0=No)\n", 0, 1)
+    if lonewolfkillconfirm:
+        return playerselectnotself(playerid)
+
+
 def vote(playerid):
     if playerlist[playerid].roleid not in evilrolelist and playerlist[playerid].roleid != 5:
         print(f"You can select a player to vote who you think is a {werewolf}, or you can skip vote. Remember, if a {jester} is voted out then they will win")
@@ -680,9 +707,11 @@ run = True
 while run:
     night += 1 # Increments night counter at the start of the game loop, starting at 1
 
-    werewolfkillvotes = [] # Resets werewolf kill votes at the start of the game loop
-    sheriffresult = [False, False, -1] # Resets sheriff result at the start of the game loop
-    altruistresult = None # Resets altruist result at the start of the game loop
+    # Resetting night variables at the start of the game loop
+    werewolfkillvotes = []
+    sheriffresult = [False, False, -1]
+    altruistresult = None
+    lonewolfkill = None
 
     for i in range(playernum):
         if playerlist[i].roleid == 9:
@@ -779,6 +808,8 @@ while run:
                     print(f"You will be able to guess the roles of {red}werewolves{reset} during the voting phase. Be careful, if you guess wrong you will die")
                     sleep(1)
                     disguiseact()
+                case 15: # Lone Wolf
+                    lonewolfkill = lonewolfact(i)
                 case _:
                     print("Role not found")
 
@@ -800,6 +831,14 @@ while run:
     # Werewolf kill
     werewolfkill()
     sleep(1)
+
+    # Possible Lone Wolf kill
+    if lonewolfkill != None:
+        if playerlist[lonewolfkill].protected:
+            print(f"The {lonewolf} attempted to kill player {playerlist[lonewolfkill].name}, but they were protected")
+        else:
+            print(f"The {lonewolf} killed player {playerlist[lonewolfkill].name}")
+            playerlist[lonewolfkill].die()
 
     # Possible sheriff kill
     if sheriffresult[0]: # If the sheriff attempted to kill someone
@@ -933,6 +972,10 @@ if not jesterwin:
         print("The villagers have won!")
     elif checkwinresult[1] == 2:
         print(f"The {red}werewolves{reset} have won!")
+    elif checkwinresult[1] == 3:
+        for i in range(playernum):
+            if playerlist[i].roleid == 15:
+                print(f"The {lonewolf} {playerlist[i].name} has won!")
 else:
     print(f"The {jester} has won!")
     for i in range(playernum):
