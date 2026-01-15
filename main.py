@@ -213,7 +213,7 @@ while True:
         else:
             print("Name is already taken")
 
-if intinputvalidate("Would you like players to display their role on death? (1=Yes, 0=No)", 0, 1) == 1:
+if intinputvalidate("Would you like players to display their role on death? (1=Yes, 0=No)\n", 0, 1) == 1:
     roledisplayondeath = True
 else:
     roledisplayondeath = False
@@ -403,7 +403,7 @@ def checkwin():
     if lonewolfalive and aliveplayersnum <= 2:
         anywin = True
         winid = 3
-    elif alivewerewolvesnum <= 0:
+    elif not lonewolfalive and alivewerewolvesnum <= 0:
         anywin = True
         winid = 1
     elif aliveplayersnum / 2 <= alivewerewolvesnum:
@@ -917,6 +917,18 @@ while run:
             elif votelist[i][1] == maxvotenum: # If equal to max
                 votedplayerlist.append(votelist[i][0])
             # Otherwise the index can be ignored
+
+        print("All votes:")
+        for i in range(len(votelist)):
+            output = ''
+            if votelist[i][0] == 'skip':
+                output += 'Skip'
+            else:
+                output += playerlist[votelist[i][0]].name
+            output += f': {votelist[i][1]} votes'
+            print(output)
+        print()
+        sleep(1)
 
         if len(votedplayerlist) == 1: # If one player had the most votes
             votedplayer = votedplayerlist[0]
