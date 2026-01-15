@@ -378,7 +378,7 @@ def roleselect(werewolfbool):
             for i in range(len(rolenamesnocolour)):
                 if rolenamesnocolour[i] == selectrole:
                     selectid = i
-            if werewolfbool and (selectid in townrolelist or selectid in neutralrolelist):
+            if werewolfbool and (selectid in townrolelist or selectid in trueneutralrolelist or selectid in neutralkillrolelist):
                 flag = True
             elif not werewolfbool and (selectid in neutralrolelist or selectid in evilrolelist):
                 flag = True
