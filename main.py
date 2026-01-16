@@ -69,8 +69,8 @@ orange = "\033[38;5;214m"
 darkorange = "\033[38;5;142m"
 
 
-# Roles: 0 - Villager, 1 - Werewolf, 2 - Naughty Girl, 3 - Drunk, 4 - Hunter, 5 - Jester, 6 - Sheriff, 7 - Medic, 8 - Survivor, 9 - Guardian Angel, 10 - Altruist, 11 - Guesser Wolf, 12 - Imitator, 13 - Berserker Wolf, 14 - Vigilante, 15 - Lone Wolf
-# Town: Villager, Naughty Girl, Drunk, Hunter, Sheriff, Medic, Altruist, Imitator, Vigilante
+# Roles: 0 - Villager, 1 - Werewolf, 2 - Naughty Girl, 3 - Drunk, 4 - Hunter, 5 - Jester, 6 - Sheriff, 7 - Medic, 8 - Survivor, 9 - Guardian Angel, 10 - Altruist, 11 - Guesser Wolf, 12 - Imitator, 13 - Berserker Wolf, 14 - Vigilante, 15 - Lone Wolf, 16 - Mayor
+# Town: Villager, Naughty Girl, Drunk, Hunter, Sheriff, Medic, Altruist, Imitator, Vigilante, Mayor
 # Neutral: Jester, Survivor, Guardian Angel, Lone Wolf
 # Evil: Werewolf, Guesser Wolf, Berserker Wolf
 rolenames = [f"{dim}Villager{reset}", # 0
@@ -88,7 +88,8 @@ rolenames = [f"{dim}Villager{reset}", # 0
              f"{yellowgreen}Imitator{reset}", # 12
              f"{red}Berserker Wolf{reset}", # 13
              f"{darkorange}Vigilante{reset}", # 14
-             f"{brightred}Lone Wolf{reset}" # 15
+             f"{brightred}Lone Wolf{reset}", # 15
+             f"{magenta}Mayor{reset}" # 16
              ]
 
 rolenamesnocolour = ["Villager", # 0
@@ -106,10 +107,11 @@ rolenamesnocolour = ["Villager", # 0
                      "Imitator", # 12
                      "Berserker Wolf", # 13
                      "Vigilante", # 14
-                     "Lone Wolf" # 15
+                     "Lone Wolf", # 15
+                     "Mayor" # 16
                      ]
 
-townrolelist = [0, 2, 3, 4, 6, 7, 10, 12, 14]
+townrolelist = [0, 2, 3, 4, 6, 7, 10, 12, 14, 16]
 neutralgoodrolelist = [8]
 trueneutralrolelist = [5, 9]
 neutralkillrolelist = [15]
@@ -134,6 +136,7 @@ imitator = rolenames[12]
 berserkerwolf = rolenames[13]
 vigilante = rolenames[14]
 lonewolf = rolenames[15]
+mayor = rolenames[16]
 
 playerlist = []
 playernamelist = []
@@ -378,7 +381,7 @@ def roleselect(werewolfbool):
             for i in range(len(rolenamesnocolour)):
                 if rolenamesnocolour[i] == selectrole:
                     selectid = i
-            if werewolfbool and (selectid in townrolelist or selectid in trueneutralrolelist or selectid in neutralkillrolelist):
+            if werewolfbool and ((selectid in townrolelist and selectid != 16) or selectid in trueneutralrolelist or selectid in neutralkillrolelist):
                 flag = True
             elif not werewolfbool and (selectid in neutralrolelist or selectid in evilrolelist):
                 flag = True
@@ -708,6 +711,7 @@ def vigilanteact(playerid):
 night = 0
 jesterwin = False
 imitatorselectedroleid = None
+mayorid = None
 
 run = True
 while run:
@@ -816,13 +820,18 @@ while run:
                     disguiseact()
                 case 15: # Lone Wolf
                     lonewolfkill = lonewolfact(i)
+                case 16: # Mayor
+                    print("During meetings, everyone will know your role and it can't be guessed by werewolves")
+                    sleep(1)
+                    print("This means all of the town will know you are innocent, and your vote also counts 3 times")
+                    sleep(1)
+                    disguiseact()
                 case _:
                     print("Role not found")
 
         else:
             print(f"Player {playername} is dead.")
 
-        sleep(1)
         input("Press enter when you are ready to end your action and move on to the next player:\n")
 
     # End of night
@@ -866,6 +875,14 @@ while run:
     if checkwinresult[0]: # If there has been a win, exit the game loop
         run = False
     else: # Otherwise, the players will vote someone out
+
+        # Mayor display
+        for i in range(playernum):
+            if playerlist[i].roleid == 16:
+                mayorid = i
+                print(f"Player {playerlist[mayorid].name} is the {mayor}\n")
+                sleep(1)
+
         print("It is time to vote a player out. Discuss amongst yourselves who you want to vote")
         sleep(1)
         input("Press enter when everyone is ready to vote\n")
@@ -899,10 +916,16 @@ while run:
                 voteflag = True
                 for j in range(len(votelist)):
                     if votelist[j][0] == playervote:
-                        votelist[j][1] += 1
+                        if playerlist[i].roleid == 16: # Mayor has 3x votes
+                            votelist[j][1] += 3
+                        else:
+                            votelist[j][1] += 1
                         voteflag = False
                 if voteflag: # If vote not already in list
-                    votelist.append([playervote, 1])
+                    if playerlist[i].roleid == 16: # Mayor has 3x votes
+                        votelist.append([playervote, 3])
+                    else:
+                        votelist.append([playervote, 1])
 
             else:
                 print(f"Player {playerlist[i].name} is dead")
@@ -953,7 +976,7 @@ while run:
             print("Because there was a tie in votes, no one will be removed from the game")
 
         # Werewolf snipe results
-        if len(sniperesultlist) > 0:
+        for i in range(len(sniperesultlist)):
             if sniperesultlist[i][0]:
                 if sniperesultlist[i][1]:
                     print(f"A {werewolf} correctly guessed the role of player {playerlist[sniperesultlist[i][2]].name}")
