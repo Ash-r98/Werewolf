@@ -994,8 +994,7 @@ while run:
                 print("The players chose to skip the vote")
         else: # In case of a tie
             print(f"There was a tie in votes between {len(votedplayerlist)} players:")
-            for playerid in votedplayerlist:
-                print(playerlist[playerid].name)
+            sleep(1)
             print("Because there was a tie in votes, no one will be removed from the game")
 
         # Werewolf snipe results
