@@ -901,7 +901,7 @@ while run:
 
         # Mayor display
         for i in range(playernum):
-            if playerlist[i].roleid == 16:
+            if playerlist[i].roleid == 16 and playerlist[i].living:
                 mayorid = i
                 print(f"Player {playerlist[mayorid].name} is the {mayor}\n")
                 sleep(1)
@@ -1065,5 +1065,11 @@ for i in range(playernum):
         if playerlist[i].guardianangelprotectingid in winneridlist:
             print(f"Player {playerlist[i].name} also won, as they were the {guardianangel} protecting {playerlist[playerlist[i].guardianangelprotectingid].name} who won!")
             winneridlist.append(i)
+
+sleep(1)
+
+print("All winners:")
+for winner in winneridlist:
+    print(winner)
 
 sleep(10)
