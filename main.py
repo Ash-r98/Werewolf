@@ -184,6 +184,27 @@ def displayneutralroles():
     print()  # Leaves whitespace after roles are displayed
 
 
+def displayneutralgoodroles():
+    print(f"All {len(neutralrolelist)} neutral good roles:")
+    for role in neutralgoodrolelist:
+        print(rolenames[role])
+    print()  # Leaves whitespace after roles are displayed
+
+
+def displaytrueneutralroles():
+    print(f"All {len(neutralrolelist)} true neutral roles:")
+    for role in trueneutralrolelist:
+        print(rolenames[role])
+    print()  # Leaves whitespace after roles are displayed
+
+
+def displayneutralkillingroles():
+    print(f"All {len(neutralrolelist)} neutral killing roles:")
+    for role in neutralkillrolelist:
+        print(rolenames[role])
+    print()  # Leaves whitespace after roles are displayed
+
+
 def displayevilroles():
     print(f"All {len(evilrolelist)} evil roles:")
     for role in evilrolelist:
@@ -374,9 +395,11 @@ def roleselect(werewolfbool):
         if selectrole == '':
             if werewolfbool:
                 displaytownroles()
+                displaytrueneutralroles()
+                displayneutralkillingroles()
             else:
                 displayevilroles()
-            displayneutralroles()
+                displayneutralroles()
         else:
             for i in range(len(rolenamesnocolour)):
                 if rolenamesnocolour[i] == selectrole:
