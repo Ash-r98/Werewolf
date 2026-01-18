@@ -1069,7 +1069,7 @@ for i in range(playernum):
 sleep(1)
 
 print("All winners:")
-for winner in winneridlist:
-    print(winner)
+for winnerid in winneridlist:
+    print(playerlist[winnerid].name)
 
 sleep(10)
