@@ -472,8 +472,8 @@ def privateplayerchoiceprep(playerid):
 def displaywerewolfallies():
     if len(werewolfallylist) > 1:
         print(f"The {red}werewolves{reset} are:")
-        for ally in werewolfallylist:
-            print(ally)
+        for i in range(len(werewolfallylist)):
+            print(f"{werewolfallylist[i][0]}: {rolenames[werewolfallylist[i][1]]}")
 
 
 # Character Actions
@@ -807,7 +807,7 @@ while run:
     werewolfallylist = []
     for j in range(len(roleslist)):
         if roleslist[j] in evilrolelist:
-            werewolfallylist.append(playerlist[j])
+            werewolfallylist.append([playerlist[j].name, playerlist[j].roleid])
 
     for i in range(playernum):
         playername = playerlist[i].name # For easy use in the for loop
