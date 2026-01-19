@@ -41,6 +41,9 @@ class Player:
         # Guesser wolf attributes
         self.doubleshotavailable = True
 
+        # Jailor attributes
+        self.jailallowed = True
+
     def die(self):
         self.living = False
         if roledisplayondeath:
@@ -69,8 +72,8 @@ orange = "\033[38;5;214m"
 darkorange = "\033[38;5;142m"
 
 
-# Roles: 0 - Villager, 1 - Werewolf, 2 - Naughty Girl, 3 - Drunk, 4 - Hunter, 5 - Jester, 6 - Sheriff, 7 - Medic, 8 - Survivor, 9 - Guardian Angel, 10 - Altruist, 11 - Guesser Wolf, 12 - Imitator, 13 - Berserker Wolf, 14 - Vigilante, 15 - Lone Wolf, 16 - Mayor
-# Town: Villager, Naughty Girl, Drunk, Hunter, Sheriff, Medic, Altruist, Imitator, Vigilante, Mayor
+# Roles: 0 - Villager, 1 - Werewolf, 2 - Naughty Girl, 3 - Drunk, 4 - Hunter, 5 - Jester, 6 - Sheriff, 7 - Medic, 8 - Survivor, 9 - Guardian Angel, 10 - Altruist, 11 - Guesser Wolf, 12 - Imitator, 13 - Berserker Wolf, 14 - Vigilante, 15 - Lone Wolf, 16 - Mayor, 17 - Jailor
+# Town: Villager, Naughty Girl, Drunk, Hunter, Sheriff, Medic, Altruist, Imitator, Vigilante, Mayor, Jailor
 # Neutral: Jester, Survivor, Guardian Angel, Lone Wolf
 # Evil: Werewolf, Guesser Wolf, Berserker Wolf
 rolenames = [f"{dim}Villager{reset}", # 0
@@ -89,7 +92,8 @@ rolenames = [f"{dim}Villager{reset}", # 0
              f"{red}Berserker Wolf{reset}", # 13
              f"{darkorange}Vigilante{reset}", # 14
              f"{brightred}Lone Wolf{reset}", # 15
-             f"{magenta}Mayor{reset}" # 16
+             f"{magenta}Mayor{reset}", # 16
+             f"{dim}Jailor{reset}" # 17
              ]
 
 rolenamesnocolour = ["Villager", # 0
@@ -108,10 +112,11 @@ rolenamesnocolour = ["Villager", # 0
                      "Berserker Wolf", # 13
                      "Vigilante", # 14
                      "Lone Wolf", # 15
-                     "Mayor" # 16
+                     "Mayor", # 16
+                     "Jailor" # 17
                      ]
 
-townrolelist = [0, 2, 3, 4, 6, 7, 10, 12, 14, 16]
+townrolelist = [0, 2, 3, 4, 6, 7, 10, 12, 14, 16, 17]
 neutralgoodrolelist = [8]
 trueneutralrolelist = [5, 9]
 neutralkillrolelist = [15]
@@ -137,6 +142,7 @@ berserkerwolf = rolenames[13]
 vigilante = rolenames[14]
 lonewolf = rolenames[15]
 mayor = rolenames[16]
+jailor = rolenames[17]
 
 playerlist = []
 playernamelist = []
@@ -671,7 +677,40 @@ def lonewolfact(playerid):
     sleep(1)
     lonewolfkillconfirm = intinputvalidate("Would you like to kill someone tonight? (1=Yes, 0=No)\n", 0, 1)
     if lonewolfkillconfirm:
-        return playerselectnotself(playerid)
+        lonewolfkillid = playerselectnotself(playerid)
+        return lonewolfkillid
+    else:
+        return None
+
+
+def jailornightact(playerid):
+    if playerlist[playerid].jailallowed:
+        print("You can select a player, and during the next discussion section they won't be allowed to talk or give any information")
+        sleep(1)
+        print("During the voting phase, you will be allowed to kill this player if you believe they are a neutral or evil role, but if you are wrong you will be unable to jail again")
+        sleep(1)
+        jailconfirm = intinputvalidate("Would you like to jail someone tonight? (1=Yes, 0=No)\n", 0, 1)
+        if jailconfirm:
+            jailedid = playerselectnotself(playerid)
+            return jailedid
+        else:
+            return None
+    else:
+        print("You have jailed and killed an innocent, so you are not allowed to jail again")
+        sleep(1)
+        disguiseact()
+        return None
+
+
+def jailordayact(jailorid, jailedid):
+    print(f"Because you are the {jailor}, you can kill player {playerlist[jailedid].name}, but if they are innocent then you won't be allowed to jail again")
+    jailedkillconfirm = intinputvalidate(f"Would you like to kill player {playerlist[jailedid].name}? (1=Yes, 0=No)\n", 0, 1)
+    if jailedkillconfirm:
+        if playerlist[jailedid].roleid in townrolelist:
+            playerlist[jailorid].jailallowed = False
+        return True
+    else:
+        return False
 
 
 def vote(playerid):
@@ -745,6 +784,7 @@ while run:
     sheriffresult = [False, False, -1]
     altruistresult = None
     lonewolfkill = None
+    jailorresult = None
 
     for i in range(playernum):
         if playerlist[i].roleid == 9:
@@ -849,6 +889,8 @@ while run:
                     print("This means all of the town will know you are innocent, and your vote also counts 3 times")
                     sleep(1)
                     disguiseact()
+                case 17: # Jailor
+                    jailorresult = jailornightact(i)
                 case _:
                     print("Role not found")
 
@@ -894,6 +936,11 @@ while run:
                 playerlist[sheriffresult[2]].die()
         sleep(1)
 
+    # Possible jail
+    if jailorresult != None:
+        if playerlist[jailorresult].living: # If jailed person is still alive
+            print(f"The {jailor} has jailed {playerlist[jailorresult].name}. They are not allowed to talk until the next day")
+
     checkwinresult = checkwin()
     if checkwinresult[0]: # If there has been a win, exit the game loop
         run = False
@@ -933,6 +980,9 @@ while run:
                     vigilanteresult = vigilanteact(i)
                     print()
                     sleep(1)
+
+                if playerlist[i].roleid == 17: # Jailor kill
+                    jailorkillresult = jailordayact(i, jailorresult)
 
                 playervote = vote(i)
 
@@ -996,6 +1046,8 @@ while run:
             print(f"There was a tie in votes between {len(votedplayerlist)} players:")
             sleep(1)
             print("Because there was a tie in votes, no one will be removed from the game")
+        sleep(1)
+        print()
 
         # Werewolf snipe results
         for i in range(len(sniperesultlist)):
@@ -1009,6 +1061,7 @@ while run:
                     else:
                         print(f"Player {playerlist[sniperesultlist[i][2]].name} attempted to guess another player's role but was incorrect")
                         playerlist[sniperesultlist[i][2]].die()
+                sleep(1)
 
         # Vigilante snipe results
         if vigilanteresult[0]:
@@ -1017,6 +1070,16 @@ while run:
             else:
                 print(f"Player {playerlist[vigilanteresult[2]].name} attempted to guess a werewolf's role but was incorrect")
             playerlist[vigilanteresult[2]].die()
+            sleep(1)
+
+        # Jailor kill
+        if jailorkillresult:
+            if playerlist[jailorresult].protected:
+                print(f"The jailor attempted to kill player {playerlist[jailorresult].name}, but they were protected")
+            else:
+                print(f"The jailor killed player {playerlist[jailorresult].name}")
+                playerlist[jailorresult].die()
+            sleep(1)
 
 
         checkwinresult = checkwin()
