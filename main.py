@@ -506,6 +506,8 @@ def werewolfact(playerid):
     if jonklerjoke is not None:
         print(f"{jonkler}: {jonklerjoke}")
         sleep(randint(1, 3))
+        print(f"I hope you didn't laugh, only werewolves see this joke")
+        sleep(1)
 
     killvote = playerselectnotself(playerid)
     werewolfkillvotes.append([killvote, playerid])
@@ -722,9 +724,11 @@ def jailordayact(jailorid, jailedid):
 
 
 def jonkleract():
-    print("You can enter a joke which will display when the werewolves take their turn, so if they laugh you will know it is them")
+    print(f"You can enter a joke which will display when the {red}werewolves{reset} take their turn, so if they laugh you will know it is them")
     sleep(1)
-    return input("Enter your funniest joke:\n")
+    jonklerjokelocal = input("Enter your funniest joke:\n")
+    print(f"The {red}werewolves{reset} will either see this joke this night or next night depending if they are before or after you in turn order")
+    return jonklerjokelocal
 
 
 def vote(playerid):
