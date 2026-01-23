@@ -72,8 +72,8 @@ orange = "\033[38;5;214m"
 darkorange = "\033[38;5;142m"
 
 
-# Roles: 0 - Villager, 1 - Werewolf, 2 - Naughty Girl, 3 - Drunk, 4 - Hunter, 5 - Jester, 6 - Sheriff, 7 - Medic, 8 - Survivor, 9 - Guardian Angel, 10 - Altruist, 11 - Guesser Wolf, 12 - Imitator, 13 - Berserker Wolf, 14 - Vigilante, 15 - Lone Wolf, 16 - Mayor, 17 - Jailor
-# Town: Villager, Naughty Girl, Drunk, Hunter, Sheriff, Medic, Altruist, Imitator, Vigilante, Mayor, Jailor
+# Roles: 0 - Villager, 1 - Werewolf, 2 - Naughty Girl, 3 - Drunk, 4 - Hunter, 5 - Jester, 6 - Sheriff, 7 - Medic, 8 - Survivor, 9 - Guardian Angel, 10 - Altruist, 11 - Guesser Wolf, 12 - Imitator, 13 - Berserker Wolf, 14 - Vigilante, 15 - Lone Wolf, 16 - Mayor, 17 - Jailor, 18 - Jonkler
+# Town: Villager, Naughty Girl, Drunk, Hunter, Sheriff, Medic, Altruist, Imitator, Vigilante, Mayor, Jailor, Jonkler
 # Neutral: Jester, Survivor, Guardian Angel, Lone Wolf
 # Evil: Werewolf, Guesser Wolf, Berserker Wolf
 rolenames = [f"{dim}Villager{reset}", # 0
@@ -93,7 +93,8 @@ rolenames = [f"{dim}Villager{reset}", # 0
              f"{darkorange}Vigilante{reset}", # 14
              f"{brightred}Lone Wolf{reset}", # 15
              f"{magenta}Mayor{reset}", # 16
-             f"{dim}Jailor{reset}" # 17
+             f"{dim}Jailor{reset}", # 17
+             f"{red}J{orange}o{yellow}n{green}k{blue}l{brightmagenta}e{magenta}r{reset}" # 18
              ]
 
 rolenamesnocolour = ["Villager", # 0
@@ -113,10 +114,11 @@ rolenamesnocolour = ["Villager", # 0
                      "Vigilante", # 14
                      "Lone Wolf", # 15
                      "Mayor", # 16
-                     "Jailor" # 17
+                     "Jailor", # 17
+                     "Jonkler" # 18
                      ]
 
-townrolelist = [0, 2, 3, 4, 6, 7, 10, 12, 14, 16, 17]
+townrolelist = [0, 2, 3, 4, 6, 7, 10, 12, 14, 16, 17, 18]
 neutralgoodrolelist = [8]
 trueneutralrolelist = [5, 9]
 neutralkillrolelist = [15]
@@ -143,6 +145,7 @@ vigilante = rolenames[14]
 lonewolf = rolenames[15]
 mayor = rolenames[16]
 jailor = rolenames[17]
+jonkler = rolenames[18]
 
 playerlist = []
 playernamelist = []
@@ -500,6 +503,10 @@ def werewolfact(playerid):
         print(f"Werewolf {playerlist[werewolfkillvotes[i][1]]} voted to kill {playerlist[werewolfkillvotes[i][0]]} this night")
         sleep(1)
 
+    if jonklerjoke is not None:
+        print(f"{jonkler}: {jonklerjoke}")
+        sleep(randint(1, 3))
+
     killvote = playerselectnotself(playerid)
     werewolfkillvotes.append([killvote, playerid])
 
@@ -704,6 +711,7 @@ def jailornightact(playerid):
 
 def jailordayact(jailorid, jailedid):
     print(f"Because you are the {jailor}, you can kill player {playerlist[jailedid].name}, but if they are innocent then you won't be allowed to jail again")
+    sleep(1)
     jailedkillconfirm = intinputvalidate(f"Would you like to kill player {playerlist[jailedid].name}? (1=Yes, 0=No)\n", 0, 1)
     if jailedkillconfirm:
         if playerlist[jailedid].roleid in townrolelist:
@@ -711,6 +719,12 @@ def jailordayact(jailorid, jailedid):
         return True
     else:
         return False
+
+
+def jonkleract():
+    print("You can enter a joke which will display when the werewolves take their turn, so if they laugh you will know it is them")
+    sleep(1)
+    return input("Enter your funniest joke:\n")
 
 
 def vote(playerid):
@@ -785,6 +799,7 @@ while run:
     altruistresult = None
     lonewolfkill = None
     jailorresult = None
+    jonklerjoke = None
 
     for i in range(playernum):
         if playerlist[i].roleid == 9:
@@ -891,6 +906,8 @@ while run:
                     disguiseact()
                 case 17: # Jailor
                     jailorresult = jailornightact(i)
+                case 18: # Jonkler
+                    jonklerjoke = jonkleract()
                 case _:
                     print("Role not found")
 
